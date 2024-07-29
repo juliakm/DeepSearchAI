@@ -69,10 +69,10 @@ if [ -d "frontend" ]; then
   echo "Restoring npm packages in frontend directory..."
 
   # Clear npm cache
-  npm cache clean --force
+  #npm cache clean --force
 
   # Remove existing node_modules directory and package-lock.json
-  rm -rf frontend/node_modules frontend/package-lock.json
+  #rm -rf frontend/node_modules frontend/package-lock.json
 
   cd frontend
 
