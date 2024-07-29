@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-# Ensure the venv directory exists and create it if it doesn't
+# Remove existing virtual environment if it exists
 if [ -d "venv" ]; then
   echo "Removing existing virtual environment..."
   rm -rf venv
 fi
 
-# Use Python 3.11 to create the virtual environment
-echo "Creating virtual environment using python3..."
-python3 -m venv venv || { echo "Failed to create virtual environment"; exit 1; }
-
 # Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
+export PATH=$PATH:/home/.local/bin
+
+# Create a virtual environment using a pre-installed virtualenv or workaround
+echo "Creating virtual environment using a workaround..."
+python3 -m venv venv || { echo "Failed to create virtual environment"; exit 1; }
 
 # Activate the virtual environment
 echo "Activating virtual environment..."
@@ -29,16 +29,6 @@ if [ -z "$VIRTUAL_ENV" ]; then
   echo "Virtual environment is not activated."
   exit 1
 fi
-
-# Install virtualenv if not available
-if ! pip show virtualenv &> /dev/null; then
-  echo "Installing virtualenv..."
-  pip install virtualenv || { echo "Failed to install virtualenv"; exit 1; }
-fi
-
-# Create the virtual environment using virtualenv
-echo "Creating virtual environment using virtualenv..."
-virtualenv venv || { echo "Failed to create virtual environment with virtualenv"; exit 1; }
 
 # Upgrade pip and install dependencies
 echo "Upgrading pip and installing dependencies..."
