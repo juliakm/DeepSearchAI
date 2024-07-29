@@ -5,16 +5,24 @@ echo "Removing existing virtual environment..."
 rm -rf venv
 
 # Check if ensurepip is available
-if ! python3 -m ensurepip --version &> /dev/null; then
+python3 -m ensurepip --version &> /dev/null
+if [ $? -ne 0 ]; then
   echo "ensurepip not available, manually installing pip..."
   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
   python3 get-pip.py --user
   export PATH=$HOME/.local/bin:$PATH
 fi
 
-# Creating a new virtual environment using python3
-echo "Creating virtual environment using python3..."
-python3 -m venv venv
+# Installing virtualenv manually if necessary
+if ! command -v virtualenv &> /dev/null; then
+  echo "virtualenv not found, installing virtualenv..."
+  pip install --user virtualenv
+  export PATH=$HOME/.local/bin:$PATH
+fi
+
+# Creating a new virtual environment using virtualenv
+echo "Creating virtual environment using virtualenv..."
+virtualenv venv
 if [ $? -ne 0 ]; then
   echo "Failed to create virtual environment"
   exit 1
