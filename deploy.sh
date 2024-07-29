@@ -9,11 +9,11 @@ echo "Adding ~/.local/bin to PATH..."
 export PATH=$HOME/.local/bin:$PATH
 
 # Check if ensurepip is available
-python3 -m ensurepip --version &> /dev/null
+python -m ensurepip --version &> /dev/null
 if [ $? -ne 0 ]; then
   echo "ensurepip not available, manually installing pip..."
   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-  python3 get-pip.py --user
+  python get-pip.py --user
   export PATH=$HOME/.local/bin:$PATH
 fi
 
@@ -82,11 +82,14 @@ if [ -d "frontend" ]; then
   # Clear npm cache
   npm cache clean --force
 
-  # Remove existing node_modules directory
-  rm -rf frontend/node_modules
+  # Remove existing node_modules directory and package-lock.json
+  rm -rf frontend/node_modules frontend/package-lock.json
 
   cd frontend
+
+  # Regenerate package-lock.json
   npm install || (echo "Failed to restore frontend npm packages. See above for logs." && exit 1)
+
   cd ..
 else
   echo "Frontend directory not found"
@@ -97,7 +100,7 @@ cd /home/site/wwwroot || exit
 
 # Verify that the application can import BeautifulSoup
 echo "Verifying BeautifulSoup import..."
-python3 -c "from bs4 import BeautifulSoup; print('BeautifulSoup import successful')"
+python -c "from bs4 import BeautifulSoup; print('BeautifulSoup import successful')"
 if [ $? -ne 0 ]; then
   echo "Failed to import BeautifulSoup."
   exit 1
