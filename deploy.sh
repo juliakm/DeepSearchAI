@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 
-# Remove existing virtual environment if it exists
-if [ -d "venv" ]; then
-  echo "Removing existing virtual environment..."
-  rm -rf venv
+# Removing any existing virtual environment
+echo "Removing existing virtual environment..."
+rm -rf venv
+
+# Check if ensurepip is available
+if ! python3 -m ensurepip --version &> /dev/null; then
+  echo "ensurepip not available, manually installing pip..."
+  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+  python3 get-pip.py --user
+  export PATH=$HOME/.local/bin:$PATH
 fi
 
-# Ensure pip is in the PATH
-export PATH=$PATH:/home/.local/bin
+# Creating a new virtual environment using python3
+echo "Creating virtual environment using python3..."
+python3 -m venv venv
+if [ $? -ne 0 ]; then
+  echo "Failed to create virtual environment"
+  exit 1
+fi
 
-# Create a virtual environment using a pre-installed virtualenv or workaround
-echo "Creating virtual environment using a workaround..."
-python3 -m venv venv || { echo "Failed to create virtual environment"; exit 1; }
-
-# Activate the virtual environment
+# Activating the virtual environment
 echo "Activating virtual environment..."
 if [ -f "venv/bin/activate" ]; then
   source venv/bin/activate
@@ -52,12 +59,7 @@ export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
 if [ -d "frontend" ]; then
   echo "Restoring npm packages in frontend directory..."
   cd frontend
-  npm cache clean --force
-  rm -rf node_modules package-lock.json
-  npm install
-  if [ $? -ne 0 ]; then
-    echo "Failed to restore frontend npm packages. See above for logs."
-  fi
+  npm install || (echo "Failed to restore frontend npm packages. See above for logs." && exit 1)
   cd ..
 else
   echo "Frontend directory not found"
@@ -65,11 +67,3 @@ fi
 
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
-
-# Listing directory contents for debugging
-echo "Listing directory contents for debugging:"
-ls -al
-
-# Listing contents of venv/bin directory
-echo "Listing contents of venv/bin directory:"
-ls -al venv/bin
