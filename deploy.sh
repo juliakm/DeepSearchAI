@@ -1,12 +1,32 @@
 #!/usr/bin/env bash
 
-# Removing any existing virtual environment
-echo "Removing existing virtual environment..."
-rm -rf venv antenv /tmp/8dcae9a511ee18a/antenv
+# Adding ~/.local/bin to PATH
+echo "Adding ~/.local/bin to PATH..."
+export PATH=$HOME/.local/bin:$PATH
 
-# Extract the pre-built virtual environment
-echo "Extracting pre-built virtual environment..."
-tar -xzvf venv.tar.gz
+# Check if ensurepip is available
+python -m ensurepip --version &> /dev/null
+if [ $? -ne 0 ]; then
+  echo "ensurepip not available, manually installing pip..."
+  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+  python get-pip.py --user
+  export PATH=$HOME/.local/bin:$PATH
+fi
+
+# Installing virtualenv manually if necessary
+if ! command -v virtualenv &> /dev/null; then
+  echo "virtualenv not found, installing virtualenv..."
+  pip install --user virtualenv
+  export PATH=$HOME/.local/bin:$PATH
+fi
+
+# Creating a new virtual environment using virtualenv
+echo "Creating virtual environment using virtualenv..."
+virtualenv venv
+if [ $? -ne 0 ]; then
+  echo "Failed to create virtual environment"
+  exit 1
+fi
 
 # Activating the virtual environment
 echo "Activating virtual environment..."
@@ -24,6 +44,12 @@ if [ -z "$VIRTUAL_ENV" ]; then
   echo "Virtual environment is not activated."
   exit 1
 fi
+
+# Upgrade pip and install dependencies
+echo "Upgrading pip and installing dependencies..."
+pip install --upgrade pip
+pip install -r requirements.txt
+
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
@@ -61,16 +87,4 @@ fi
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
 
-# Verify that the application can import BeautifulSoup
-echo "Verifying BeautifulSoup import..."
-python -c "from bs4 import BeautifulSoup; print('BeautifulSoup import successful')"
-if [ $? -ne 0 ]; then
-  echo "Failed to import BeautifulSoup."
-  exit 1
-fi
-
-# Override any existing PYTHONPATH
-export PYTHONPATH=/home/site/wwwroot/venv/lib/python3.11/site-packages
-
-# Azure will Launch the application...
-# python3 -m gunicorn app:app
+# Azure will Start the application
