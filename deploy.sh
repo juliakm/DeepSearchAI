@@ -8,24 +8,37 @@ fi
 
 # Use Python 3.11 to create the virtual environment
 echo "Creating virtual environment using python3..."
-python3 -m venv venv
-if [ $? -ne 0 ]; then
-  echo "Failed to create virtual environment"
-  exit 1
-fi
+python3 -m venv venv || { echo "Failed to create virtual environment"; exit 1; }
 
 # Ensure pip is in the PATH
 export PATH=$PATH:/home/.local/bin:/home/site/wwwroot/venv/bin
 
 # Activate the virtual environment
 echo "Activating virtual environment..."
-source venv/bin/activate
+if [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+elif [ -f "venv/Scripts/activate" ]; then
+  source venv/Scripts/activate
+else
+  echo "Error: venv activation script not found."
+  exit 1
+fi
 
 # Check if the virtual environment is activated
 if [ -z "$VIRTUAL_ENV" ]; then
   echo "Virtual environment is not activated."
   exit 1
 fi
+
+# Install virtualenv if not available
+if ! pip show virtualenv &> /dev/null; then
+  echo "Installing virtualenv..."
+  pip install virtualenv || { echo "Failed to install virtualenv"; exit 1; }
+fi
+
+# Create the virtual environment using virtualenv
+echo "Creating virtual environment using virtualenv..."
+virtualenv venv || { echo "Failed to create virtual environment with virtualenv"; exit 1; }
 
 # Upgrade pip and install dependencies
 echo "Upgrading pip and installing dependencies..."
