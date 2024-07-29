@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export PATH=$HOME/.local/bin:$PATH
+
 # Removing any existing virtual environment
 echo "Removing existing virtual environment..."
 rm -rf venv
@@ -65,7 +67,6 @@ fi
 
 # Ensure Node.js version is set correctly
 export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
-export PATH=$HOME/.local/bin:$PATH
 
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
