@@ -50,6 +50,9 @@ echo "Upgrading pip and installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Explicitly install beautifulsoup4
+pip install beautifulsoup4
+
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
   echo "Node.js not found, installing Node.js"
