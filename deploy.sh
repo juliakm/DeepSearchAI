@@ -65,6 +65,7 @@ fi
 
 # Ensure Node.js version is set correctly
 export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
+export PATH=/home/.local/bin:$PATH
 
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
