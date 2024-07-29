@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
-export PATH=$HOME/.local/bin:$PATH
-
 # Removing any existing virtual environment
 echo "Removing existing virtual environment..."
 rm -rf venv
+
+# Adding ~/.local/bin to PATH
+echo "Adding ~/.local/bin to PATH..."
+export PATH=$HOME/.local/bin:$PATH
 
 # Check if ensurepip is available
 python3 -m ensurepip --version &> /dev/null
@@ -52,8 +54,13 @@ echo "Upgrading pip and installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Explicitly install beautifulsoup4
-pip install beautifulsoup4
+# Verify that beautifulsoup4 is installed
+echo "Verifying beautifulsoup4 installation..."
+pip show beautifulsoup4
+if [ $? -ne 0 ]; then
+  echo "beautifulsoup4 is not installed."
+  exit 1
+fi
 
 # Install Node.js directly if not available
 if ! command -v node &> /dev/null; then
@@ -71,6 +78,13 @@ export PATH=$NVM_DIR/versions/node/v18.*/bin:$PATH
 # Ensure frontend directory exists and restore npm packages
 if [ -d "frontend" ]; then
   echo "Restoring npm packages in frontend directory..."
+
+  # Clear npm cache
+  npm cache clean --force
+
+  # Remove existing node_modules directory
+  rm -rf frontend/node_modules
+
   cd frontend
   npm install || (echo "Failed to restore frontend npm packages. See above for logs." && exit 1)
   cd ..
@@ -80,3 +94,11 @@ fi
 
 # Ensure the application directory exists and change to it
 cd /home/site/wwwroot || exit
+
+# Verify that the application can import BeautifulSoup
+echo "Verifying BeautifulSoup import..."
+python3 -c "from bs4 import BeautifulSoup; print('BeautifulSoup import successful')"
+if [ $? -ne 0 ]; then
+  echo "Failed to import BeautifulSoup."
+  exit 1
+fi
