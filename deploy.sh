@@ -2,35 +2,11 @@
 
 # Removing any existing virtual environment
 echo "Removing existing virtual environment..."
-rm -rf venv
+rm -rf venv antenv /tmp/8dcae9a511ee18a/antenv
 
-# Adding ~/.local/bin to PATH
-echo "Adding ~/.local/bin to PATH..."
-export PATH=$HOME/.local/bin:$PATH
-
-# Check if ensurepip is available
-python -m ensurepip --version &> /dev/null
-if [ $? -ne 0 ]; then
-  echo "ensurepip not available, manually installing pip..."
-  curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-  python get-pip.py --user
-  export PATH=$HOME/.local/bin:$PATH
-fi
-
-# Installing virtualenv manually if necessary
-if ! command -v virtualenv &> /dev/null; then
-  echo "virtualenv not found, installing virtualenv..."
-  pip install --user virtualenv
-  export PATH=$HOME/.local/bin:$PATH
-fi
-
-# Creating a new virtual environment using virtualenv
-echo "Creating virtual environment using virtualenv..."
-virtualenv venv
-if [ $? -ne 0 ]; then
-  echo "Failed to create virtual environment"
-  exit 1
-fi
+# Extract the pre-built virtual environment
+echo "Extracting pre-built virtual environment..."
+tar -xzvf venv.tar.gz
 
 # Activating the virtual environment
 echo "Activating virtual environment..."
@@ -46,19 +22,6 @@ fi
 # Check if the virtual environment is activated
 if [ -z "$VIRTUAL_ENV" ]; then
   echo "Virtual environment is not activated."
-  exit 1
-fi
-
-# Upgrade pip and install dependencies
-echo "Upgrading pip and installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Verify that beautifulsoup4 is installed
-echo "Verifying beautifulsoup4 installation..."
-pip show beautifulsoup4
-if [ $? -ne 0 ]; then
-  echo "beautifulsoup4 is not installed."
   exit 1
 fi
 
@@ -105,3 +68,9 @@ if [ $? -ne 0 ]; then
   echo "Failed to import BeautifulSoup."
   exit 1
 fi
+
+# Override any existing PYTHONPATH
+export PYTHONPATH=/home/site/wwwroot/venv/lib/python3.11/site-packages
+
+# Azure will Launch the application...
+# python3 -m gunicorn app:app
