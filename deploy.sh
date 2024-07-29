@@ -60,3 +60,4 @@ fi
 cd /home/site/wwwroot || exit
 
 echo "Deployment completed successfully."
+#
