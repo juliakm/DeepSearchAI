@@ -70,9 +70,15 @@ async def index():
 async def favicon():
     return await bp.send_static_file("favicon.ico")
 
+@bp.route("/list-static-files")
+async def list_static_files():
+    import os
+    files = os.listdir(bp.static_folder)
+    return {"files": files}
+
 @bp.route("/mslearnguy.png")
 async def mslearnguy():
-    return await bp.send_static_file("mslearnguy.png")
+    return await send_from_directory(bp.static_folder, "mslearnguy.png")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
