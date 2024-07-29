@@ -76,9 +76,9 @@ async def list_static_files():
     files = os.listdir(bp.static_folder)
     return {"files": files}
 
-@bp.route("/mslearnguy.png")
+@bp.route("/ms-learn-guy.png")
 async def mslearnguy():
-    return await send_from_directory(bp.static_folder, "mslearnguy.png")
+    return await send_from_directory(bp.static_folder, "ms-learn-guy.png")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
