@@ -4,15 +4,6 @@ This app is built on the Sample Chat App with AOAI GitHub project from which it 
 
 Note: some portions of the app use preview APIs.
 
-## Prerequisites
-- An existing Azure OpenAI resource and model deployment of a chat model (e.g. `gpt-35-turbo-16k`, `gpt-4`)
-- To use Azure OpenAI on your data: one of the following data sources:
-  - Azure AI Search Index
-  - Azure CosmosDB Mongo vCore vector index
-  - Elasticsearch index (preview)
-  - Pinecone index (preview)
-  - AzureML index (preview)
-
 ## Deploy the app
 
 ### Deploy from your local machine
