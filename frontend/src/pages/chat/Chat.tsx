@@ -102,24 +102,6 @@ const Chat = () => {
       return () => clearInterval(intervalId); // Cleanup on unmount
     }, [showLoadingMessage]);
 
- /*
-  useEffect(() => {
-    if (
-      appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.Working &&
-      appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured &&
-      appStateContext?.state.chatHistoryLoadingState === ChatHistoryLoadingState.Fail &&
-      hideErrorDialog
-    ) {
-      let subtitle = `${appStateContext.state.isCosmosDBAvailable.status}. Please contact the site administrator.`
-      setErrorMsg({
-        title: 'Chat history is not enabled',
-        subtitle: subtitle
-      })
-      toggleErrorDialog()
-    }
-  }, [appStateContext?.state.isCosmosDBAvailable])
-  */
-
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
     setTimeout(() => {
