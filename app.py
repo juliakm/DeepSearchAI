@@ -559,7 +559,7 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
             # Following is a lie, a trick to make it seem like we are spending time browsing than analyzing, when in fact almost all the time is actually in analysis...
             # It's just to give the user a sense of progress...
             if currentPage == len(URLsToBrowse):
-                set_status_message("Analyzing...")
+                set_status_message("Generating answer...")
             else:
                 if currentPage % 2 == 1:
                     set_status_message("Browsing...")
