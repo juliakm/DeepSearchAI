@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import json
 import os
@@ -544,28 +545,31 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                 Pages.append(page_content)
         
         set_status_message("Analyzing...")
-        currentPage = 0
-        for URL in URLsToBrowse:
-            if Pages[currentPage] != None: 
-                system_prompt = "The Original System Prompt that follows is your primary objective, but for this chat you identified the following URL for further research to give your answer: " + URL + ". Your task now is to provide a summary of relevant content on the page that will help us address the feedback on the URL provided by the user and document current sources. Return nothing except your summary of the key points and any important quotes the content on the page in a single string.\n\nPage Content:\n\n" + Pages[currentPage] + "\n\nOriginal System Prompt:\n\n"
-                summary = await send_private_chat(request_body, request_headers, None, system_prompt) # Get summary of page content
+        async def process_url(currentPage, URL):
+            if Pages[currentPage] is not None: 
+                system_prompt = (
+                    "The Original System Prompt that follows is your primary objective, "
+                    "but for this chat you identified the following URL for further research "
+                    "to give your answer: " + URL + 
+                    ". Your task now is to provide a summary of relevant content on the page "
+                    "that will help us address the feedback on the URL provided by the user "
+                    "and document current sources. Return nothing except your summary of the "
+                    "key points and any important quotes the content on the page in a single string.\n\n"
+                    "Page Content:\n\n" + Pages[currentPage] + "\n\nOriginal System Prompt:\n\n"
+                )
+                summary = await send_private_chat(request_body, request_headers, None, system_prompt)
                 summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
-                if Summaries is None:
-                    Summaries = [summary]
-                else:
-                    Summaries.append(summary)
-            currentPage += 1
+                return summary
+            return None
 
-            # Following is a lie, a trick to make it seem like we are spending time browsing than analyzing, when in fact almost all the time is actually in analysis...
-            # It's just to give the user a sense of progress...
-            if currentPage == len(URLsToBrowse):
-                set_status_message("Generating answer...")
-            else:
-                if currentPage % 2 == 1:
-                    set_status_message("Browsing...")
-                else:
-                    set_status_message("Analyzing...")
-
+        # Create tasks for all URLs
+        tasks = [process_url(currentPage, URL) for currentPage, URL in enumerate(URLsToBrowse)]
+        
+        # Run tasks concurrently
+        results = await asyncio.gather(*tasks)
+        
+        # Filter out None results and collect summaries
+        Summaries = [summary for summary in results if summary is not None]
         return Summaries
 
 async def is_background_info_sufficient(request_body, request_headers, Summaries):

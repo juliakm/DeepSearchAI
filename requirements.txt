@@ -1,5 +1,4 @@
 azure-identity==1.15.0
-# Flask[async]==2.3.2
 openai==1.37.1
 azure-search-documents==11.4.0b6
 azure-ai-formrecognizer==3.2.1
@@ -15,7 +14,6 @@ beautifulsoup4==4.9.3
 Markdown==3.4.4
 requests==2.31.0
 tqdm==4.66.1
-#tiktoken==0.4.0
 langchain==0.0.340
 bs4==0.0.1
 urllib3==2.2.2
@@ -26,3 +24,4 @@ chardet
 azure-keyvault-secrets
 coverage
 uvicorn
+asyncio
