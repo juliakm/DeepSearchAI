@@ -218,10 +218,8 @@ def prepare_model_args(request_body, request_headers, system_preamble = None, sy
     request_messages = request_body.get("messages", [])
     messages = []
     system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
-    
-    #print(f"System message in: {system_message}")
 
-    if not app_settings.datasource:
+    if not app_settings.datasource or system_preamble is not None or system_prompt is not None:
         messages = [
             {
                 "role": "system",
@@ -297,8 +295,6 @@ def prepare_model_args(request_body, request_headers, system_preamble = None, sy
                     model_args_clean["extra_body"]["data_sources"][0]["parameters"][
                         "embedding_dependency"
                     ]["authentication"][field] = "*****"
-
-    logging.debug(f"REQUEST BODY: {json.dumps(model_args_clean, indent=4)}")
 
     return model_args
 
@@ -458,10 +454,12 @@ async def search_bing(search):
         
 async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
         bg_request_body = copy.deepcopy(request_body)
+        bg_request_headers = copy.deepcopy(request_headers)
         bg_request_body["history_metadata"] = None
-        bg_request_body["conversation_id"] = str(uuid.uuid4())
-        bg_request_body["messages"] = bg_request_body["messages"][-1:]
-        result = await stream_chat_request(bg_request_body, request_headers, system_preamble, system_message)
+        #bg_request_body["conversation_id"] = str(uuid.uuid4())
+        #bg_request_body["messages"] = bg_request_body["messages"][-1:]
+
+        result = await stream_chat_request(bg_request_body, bg_request_headers, system_preamble, system_message)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
@@ -495,21 +493,14 @@ async def identify_searches(request_body, request_headers, Summaries = None):
             system_preamble = prompts["identify_searches"];
         else:
             system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
-
-        print(f"\n\nBEFORE SEARCHES\n\nSystem Preamble:\n\n{system_preamble}\n\n")
-        print(f"\n\nRequest Body:\n\n{request_body}\n\n")
         
         searches = await send_private_chat(request_body, request_headers, system_preamble)
-        
-        print(f"\n\nAFTER SEARCHES\n\nSystem Preamble:\n\n{system_preamble}\n\n")
-        print(f"\n\nRequest Body:\n\n{request_body}\n\n")
 
         if isinstance(searches, str):
             if searches == "No searches required.": 
                 set_status_message("Generating answer...")
                 return None
             else:
-                set_status_message("Searching...")
                 if searches[0] != "[":
                     searches = "[" + searches
                 if searches[-1] != "]":
@@ -524,13 +515,8 @@ async def get_urls_to_browse(request_body, request_headers, searches):
         else:
             strsearchresults = json.dumps(searchresults, indent=4)
             system_preamble = prompts["get_urls_to_browse"] + strsearchresults + "\n\nOriginal System Prompt:\n"
-            
-            request_body["messages"] = request_body["messages"][-1:]
-            
-            print(f"\n\nBeforeGetURLs\n\nSystem Preamble:\n\n{system_preamble}\n\n")
-            print(f"\n\nRequest Body:\n\n{request_body}\n\n")
-            
-            URLsToBrowse = await send_private_chat(request_body, request_headers, system_preamble)
+                        
+            URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_preamble)
             print(f"\n\nURLs to browse:\n\n{URLsToBrowse}\n\n")
             return URLsToBrowse
 
@@ -589,9 +575,6 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         strSummaries = json.dumps(Summaries, indent=4)
         system_preamble = prompts["is_background_info_sufficient"] + strSummaries + "\n\nOriginal System Prompt:\n"
 
-        print(f"\n\nBeforeSufficient\n\nSystem Preamble:\n\n{system_preamble}\n\n")
-        print(f"\n\nRequest Body:\n\n{request_body}\n\n")
-
         response = await send_private_chat(request_body, request_headers, system_preamble)
         if response == "More information needed.": 
             
@@ -616,6 +599,7 @@ async def search_and_add_background_references(request_body, request_headers):
                 return None
             
             set_status_message("Browsing...")
+
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
