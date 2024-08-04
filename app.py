@@ -515,7 +515,6 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             system_preamble = prompts["get_urls_to_browse"] + strsearchresults + "\n\nOriginal System Prompt:\n"
                         
             URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_preamble)
-            print(f"\n\nURLs to browse:\n\n{URLsToBrowse}\n\n")
             return URLsToBrowse
 
 async def fetch_and_parse_url(url):
