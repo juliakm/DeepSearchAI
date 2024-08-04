@@ -456,9 +456,8 @@ async def send_private_chat(request_body, request_headers, system_preamble = Non
         bg_request_body = copy.deepcopy(request_body)
         bg_request_headers = copy.deepcopy(request_headers)
         bg_request_body["history_metadata"] = None
-        #bg_request_body["conversation_id"] = str(uuid.uuid4())
-        #bg_request_body["messages"] = bg_request_body["messages"][-1:]
-
+        bg_request_body["conversation_id"] = str(uuid.uuid4())
+        bg_request_body["messages"] = bg_request_body["messages"][-1:]
         result = await stream_chat_request(bg_request_body, bg_request_headers, system_preamble, system_message)
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
@@ -469,16 +468,15 @@ async def send_private_chat(request_body, request_headers, system_preamble = Non
 
 async def get_search_results(searches):
         allresults = None
-        # Get the top 3 results from each search
         for search in searches:
             results = await search_bing(search);
             if results == None:
                 return "Search error."
             else:
                 if allresults == None:
-                    allresults = results[:3]
+                    allresults = results
                 else:
-                    allresults += results[:3]
+                    allresults += results
         # Remove extraneous fields
                 proparray = ["dateLastCrawled", "language", "richFacts", "isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
                 for obj in allresults:
@@ -615,7 +613,7 @@ async def search_and_add_background_references(request_body, request_headers):
                 NeedsMoreSummaries = False
 
         set_status_message("Generating answer...")
-        return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nPrimary System Message:"
+        return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n\n"
 
 async def conversation_internal(request_body, request_headers):
     try:

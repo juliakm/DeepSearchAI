@@ -15,7 +15,7 @@ prompts = {
         "The Original System Prompt that follows is your primary objective, but for this chat, you've summarized the content of the URLs you searched and identified for further research. Review the summaries below and determine if you have enough background information to fully address address the Original System Prompt while documenting all sources from within the researched current links. Sometimes no sources are required but usually 2-5 reference links are good to fully confirm ground truth, so try to get at least 2-4 relevant references to cite in your answer. If you need more information than the summaries provided here, reply with 'More information needed.' If you have enough information, reply with 'Sufficient information.'\n\n",
 
     "background_info_preamble": 
-        "Use ONLY the following Background References to thoroughly document your answer for the customer as described in the Primary System Message at the end. ONLY include links that are confirmed in the Background References\n\nBackground References:\n\n",
+        "IMPORTANT NOTE:\nUse ONLY URLs from the following Background References section to thoroughly document your answer for the customer as described in the Original System Prompt following the Background References section below.\n\nBackground References:\n\n",
 
     "search_error_preamble": 
         "NOTE: An error occurred while searching for background information. Please inform the user that you were unable to search to validate results, but do your best to answer regardless.\n\nPrimary System Message:\n\n"
