@@ -75,15 +75,3 @@ jobs:
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
-
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-      - name: Get Resource Group
-        id: get-rg
-        run: |
-          az webapp show --name 'UUFSolver' --query resourceGroup --output tsv
-
-      - name: Restart Azure Web App
-        run: az webapp restart --name 'UUFSolver' --resource-group ${{ steps.get-rg.outputs.resourceGroup }}
