@@ -535,18 +535,11 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
         Summaries = None
         URLsToBrowse = json.loads(URLsToBrowse)
         Pages = None
-
-        set_status_message("Browsing...")
-        for URL in URLsToBrowse:
-            page_content = await fetch_and_parse_url(URL)
-            if Pages is None:
-                Pages = [page_content]
-            else:
-                Pages.append(page_content)
         
-        set_status_message("Analyzing...")
-        async def process_url(currentPage, URL):
-            if Pages[currentPage] is not None: 
+        set_status_message("Browsing and analyzing...")
+        async def process_url(URL):
+            page_content = await fetch_and_parse_url(URL)
+            if page_content is not None: 
                 system_prompt = (
                     "The Original System Prompt that follows is your primary objective, "
                     "but for this chat you identified the following URL for further research "
@@ -555,7 +548,7 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
                     "that will help us address the feedback on the URL provided by the user "
                     "and document current sources. Return nothing except your summary of the "
                     "key points and any important quotes the content on the page in a single string.\n\n"
-                    "Page Content:\n\n" + Pages[currentPage] + "\n\nOriginal System Prompt:\n\n"
+                    "Page Content:\n\n" + page_content + "\n\nOriginal System Prompt:\n\n"
                 )
                 summary = await send_private_chat(request_body, request_headers, None, system_prompt)
                 summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
@@ -563,7 +556,7 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
             return None
 
         # Create tasks for all URLs
-        tasks = [process_url(currentPage, URL) for currentPage, URL in enumerate(URLsToBrowse)]
+        tasks = [process_url(URL) for URL in URLsToBrowse]
         
         # Run tasks concurrently
         results = await asyncio.gather(*tasks)
@@ -590,17 +583,10 @@ async def search_and_add_background_references(request_body, request_headers):
         NeedsMoreSummaries = True
         Summaries = None
         while NeedsMoreSummaries:
-            
-            if Summaries is None:
-                searches = await identify_searches(request_body, request_headers)
-            else:
-                searches = await identify_searches(request_body, request_headers, Summaries)
-            
+            searches = await identify_searches(request_body, request_headers)
             if searches == None:
                 return None
             
-            set_status_message("Browsing...")
-
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
