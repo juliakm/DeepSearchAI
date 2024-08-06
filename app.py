@@ -72,8 +72,8 @@ def create_app():
     
     @app.before_request
     async def ensure_session_id():
-        if 'id' not in session:
-            session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
+        session.clear()
+        session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
 
     @app.websocket('/ws')
     async def ws():
