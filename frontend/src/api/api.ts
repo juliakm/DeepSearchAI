@@ -2,15 +2,26 @@ import { chatHistorySampleData } from '../constants/chatHistory'
 
 import { ChatMessage, Conversation, ConversationRequest, CosmosDBHealth, CosmosDBStatus, UserInfo } from './models'
 
-export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal): Promise<Response> {
+export async function conversationApi(options: ConversationRequest, abortSignal: AbortSignal, pageInstanceId = ""): Promise<Response> {
+  let body = ""
+  if (pageInstanceId == "") {
+    body = JSON.stringify({
+      messages: options.messages
+    })
+  } 
+  else {
+    body = JSON.stringify({
+      messages: options.messages,
+      page_instance_id: pageInstanceId
+    })
+  }
+
   const response = await fetch('/conversation', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      messages: options.messages
-    }),
+    body: body,
     signal: abortSignal
   })
 
@@ -115,19 +126,23 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
 export const historyGenerate = async (
   options: ConversationRequest,
   abortSignal: AbortSignal,
-  convId?: string
+  convId?: string,
+  pageInstanceId = ""
 ): Promise<Response> => {
   let body
   if (convId) {
     body = JSON.stringify({
       conversation_id: convId,
-      messages: options.messages
+      messages: options.messages,
+      page_instance_id: pageInstanceId
     })
   } else {
     body = JSON.stringify({
-      messages: options.messages
+      messages: options.messages,
+      page_instance_id: pageInstanceId 
     })
   }
+  
   const response = await fetch('/history/generate', {
     method: 'POST',
     headers: {

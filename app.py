@@ -48,13 +48,8 @@ bp = Blueprint("routes", __name__, static_folder="static", template_folder="stat
 status_message = {}
 clients = {}
 
-async def set_status_message(message):
-    session_id = session.get('id')
-    if session_id in clients:
-        try:
-            await clients[session_id].send(message)
-        except:
-            del clients[session_id]  # Clean up on disconnect
+async def set_status_message(message, page_instance_id):
+    await clients[page_instance_id].send(message)
 
 def create_app():
     app = Quart(__name__)
@@ -69,30 +64,20 @@ def create_app():
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
-    
-    @app.before_request
-    async def ensure_session_id():
-        if 'id' not in session:
-            session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
 
     @app.websocket('/ws')
     async def ws():
-        session_id = session.get('id')
-        if session_id:
-            clients[session_id] = websocket._get_current_object()
-
+        page_instance_id = str(uuid.uuid4())
+        clients[page_instance_id] = websocket._get_current_object()
+        await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
-                message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
-
-                print(f"WebSocket message {message}, websocket.closed: {websocket.closed}")
-                
+                message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out              
         except Exception as e:
             print(f"WebSocket exception: {e}")
         finally:
-            # Clean up on disconnect
-            if session_id in clients:
-                del clients[session_id]
+            if page_instance_id in clients:
+                del clients[page_instance_id]
 
     return app
 
@@ -534,7 +519,6 @@ async def identify_searches(request_body, request_headers, Summaries = None):
 
         if isinstance(searches, str):
             if searches == "No searches required.": 
-                await set_status_message("Generating answer...")
                 return None
             else:
                 if searches[0] != "[":
@@ -618,29 +602,33 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
 async def search_and_add_background_references(request_body, request_headers):
         NeedsMoreSummaries = True
         Summaries = None
+
+        page_instance_id = request_body["page_instance_id"]
+
         while NeedsMoreSummaries:
             searches = await identify_searches(request_body, request_headers)
             if searches == None:
+                await set_status_message("Generating answer...", page_instance_id)
                 return None
             
-            await set_status_message("Searching...")
+            await set_status_message("Searching...", request_body["page_instance_id"])
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
-            await set_status_message("Browsing and analyzing...")
+            await set_status_message("Browsing and analyzing...", page_instance_id)
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
                 newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
                 Summaries += newSummaries
             
-            await set_status_message("Double checking sources...")
+            await set_status_message("Double checking sources...", page_instance_id)
             AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
             if AreWeDone:
                 NeedsMoreSummaries = False
 
-        await set_status_message("Generating answer...")
+        await set_status_message("Generating answer...", page_instance_id)
         return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n\n"
 
 async def conversation_internal(request_body, request_headers):
@@ -731,6 +719,7 @@ async def add_conversation():
 
         # Submit request to Chat Completions for response
         request_body = await request.get_json()
+        request_body["page_instance_id"] = page_instance_id
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
         return await conversation_internal(request_body, request.headers)

@@ -48,6 +48,7 @@ const enum messageStatus {
 
 const Chat = () => {
   const [statusMessage, setStatusMessage] = useState('Generating answer...');
+  const [pageInstanceId, setPageInstanceId] = useState<string>("");
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
@@ -92,20 +93,15 @@ const Chat = () => {
 
     const socket = new WebSocket(socketUrl);
 
-    socket.onopen = () => {
-        console.log('WebSocket connection established');
-    };
-
     socket.onmessage = (event) => {
+      if (event.data.startsWith('page_instance_id='))
+        setPageInstanceId(event.data.replace("page_instance_id=", ""));
+      else
         setStatusMessage(event.data); // Update the status message when a new one arrives
     };
 
     socket.onerror = (error) => {
         console.error('WebSocket error:', error);
-    };
-
-    socket.onclose = () => {
-        console.log('WebSocket connection closed');
     };
 
     return () => {
@@ -224,7 +220,7 @@ const Chat = () => {
 
     let result = {} as ChatResponse
     try {
-      const response = await conversationApi(request, abortController.signal)
+      const response = await conversationApi(request, abortController.signal, pageInstanceId)
       if (response?.body) {
         const reader = response.body.getReader()
 
@@ -345,8 +341,8 @@ const Chat = () => {
     var errorResponseMessage = 'Please try again. If the problem persists, please contact the site administrator.'
     try {
       const response = conversationId
-        ? await historyGenerate(request, abortController.signal, conversationId)
-        : await historyGenerate(request, abortController.signal)
+        ? await historyGenerate(request, abortController.signal, conversationId, pageInstanceId)
+        : await historyGenerate(request, abortController.signal, pageInstanceId)
       if (!response?.ok) {
         const responseJson = await response.json()
         errorResponseMessage =
