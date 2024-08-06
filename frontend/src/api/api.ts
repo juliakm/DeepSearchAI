@@ -126,8 +126,8 @@ export const historyRead = async (convId: string): Promise<ChatMessage[]> => {
 export const historyGenerate = async (
   options: ConversationRequest,
   abortSignal: AbortSignal,
-  convId?: string,
-  pageInstanceId = ""
+  pageInstanceId: string = "",
+  convId?: string
 ): Promise<Response> => {
   let body
   if (convId) {

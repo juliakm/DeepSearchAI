@@ -341,7 +341,7 @@ const Chat = () => {
     var errorResponseMessage = 'Please try again. If the problem persists, please contact the site administrator.'
     try {
       const response = conversationId
-        ? await historyGenerate(request, abortController.signal, conversationId, pageInstanceId)
+        ? await historyGenerate(request, abortController.signal, pageInstanceId, conversationId)
         : await historyGenerate(request, abortController.signal, pageInstanceId)
       if (!response?.ok) {
         const responseJson = await response.json()
