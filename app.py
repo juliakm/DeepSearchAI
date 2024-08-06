@@ -719,7 +719,6 @@ async def add_conversation():
 
         # Submit request to Chat Completions for response
         request_body = await request.get_json()
-        request_body["page_instance_id"] = page_instance_id
         history_metadata["conversation_id"] = conversation_id
         request_body["history_metadata"] = history_metadata
         return await conversation_internal(request_body, request.headers)
