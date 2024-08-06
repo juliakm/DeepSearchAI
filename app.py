@@ -49,7 +49,7 @@ status_message = {}
 clients = {}
 
 async def set_status_message(message, page_instance_id):
-    if clients[page_instance_id] is not None:
+    if page_instance_id in clients:
         await clients[page_instance_id].send(message)
     else:
         print(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clients.keys.tolist()}")
