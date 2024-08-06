@@ -79,6 +79,7 @@ def create_app():
         except Exception as e:
             print(f"WebSocket exception: {e}")
         finally:
+            print(f"WebSocket closing for page_instance_id: {page_instance_id}")
             if page_instance_id in clients:
                 del clients[page_instance_id]
 
