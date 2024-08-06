@@ -611,7 +611,7 @@ async def search_and_add_background_references(request_body, request_headers):
                 await set_status_message("Generating answer...", page_instance_id)
                 return None
             
-            await set_status_message("Searching...", request_body["page_instance_id"])
+            await set_status_message("Searching...", page_instance_id)
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
