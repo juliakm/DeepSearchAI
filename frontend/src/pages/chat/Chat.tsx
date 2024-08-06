@@ -85,22 +85,25 @@ const Chat = () => {
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        if (showLoadingMessage)
-          {
-              const response = await axios.get('/get_status');
-              if (response.data.status_message.replaceAll(".", "") != statusMessage.replaceAll(".", "")) {
-                setStatusMessage(response.data.status_message);
-              }
-          }
-        } catch (error) {
-          console.error('Error fetching status:', error);
-        }
-      }
-      const intervalId = setInterval(fetchStatus, 1200);
-      return () => clearInterval(intervalId); // Cleanup on unmount
-    }, [showLoadingMessage]);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const socketUrl = `${protocol}//${host}${port}/ws`;
+
+    const socket = new WebSocket(socketUrl);
+
+    socket.onmessage = (event) => {
+        setStatusMessage(event.data); // Update the status message when a new one arrives
+    };
+
+    socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+
+    return () => {
+        socket.close();  // Cleanup on unmount
+    };
+}, []);  // Empty dependency array means this effect runs once on mount
 
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
@@ -754,7 +757,7 @@ const Chat = () => {
   let isInitialSearchMessagePosted = useRef(false);
 
   useEffect(() => {
-    if (!isInitialSearchMessagePosted.current && appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success) {
+    if (!isInitialSearchMessagePosted.current && (appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success || appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Fail)) {
       isInitialSearchMessagePosted.current = true;
       const queryParams = new URLSearchParams(location.search);
       const entries = Array.from(queryParams.entries());

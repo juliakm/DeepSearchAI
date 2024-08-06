@@ -10,6 +10,8 @@ from prompts import prompts
 from quart import (
     Blueprint,
     Quart,
+    websocket,
+    session,
     jsonify,
     make_response,
     request,
@@ -17,7 +19,6 @@ from quart import (
     render_template,
 )
 from bs4 import BeautifulSoup
-from status_blueprint import bp as status_bp, set_status_message
 from pprint import pprint
 import requests
 from openai.types.chat import chat_completion
@@ -43,10 +44,22 @@ from backend.utils import (
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
+# Status handling
+status_message = {}
+clients = {}
+
+async def set_status_message(message):
+    session_id = session.get('id')
+    if session_id in clients:
+        try:
+            await clients[session_id].send(message)
+        except:
+            del clients[session_id]  # Clean up on disconnect
+
 def create_app():
     app = Quart(__name__)
+    app.secret_key = os.urandom(24)  # Generates a random secret key
     app.register_blueprint(bp)
-    app.register_blueprint(status_bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     # Manually add CORS headers to each response
@@ -56,6 +69,28 @@ def create_app():
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
+    
+    @app.before_request
+    async def ensure_session_id():
+        if 'id' not in session:
+            session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
+
+    @app.websocket('/ws')
+    async def ws():
+        session_id = session.get('id')
+        if session_id:
+            clients[session_id] = websocket._get_current_object()
+
+        try:
+            while True:
+                message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
+                
+        except Exception as e:
+            print(f"WebSocket exception: {e}")
+        finally:
+            # Clean up on disconnect
+            if session_id in clients:
+                del clients[session_id]
 
     return app
 
@@ -497,7 +532,7 @@ async def identify_searches(request_body, request_headers, Summaries = None):
 
         if isinstance(searches, str):
             if searches == "No searches required.": 
-                set_status_message("Generating answer...")
+                await set_status_message("Generating answer...")
                 return None
             else:
                 if searches[0] != "[":
@@ -536,7 +571,6 @@ async def get_article_summaries(request_body, request_headers, URLsToBrowse):
         URLsToBrowse = json.loads(URLsToBrowse)
         Pages = None
         
-        set_status_message("Browsing and analyzing...")
         async def process_url(URL):
             page_content = await fetch_and_parse_url(URL)
             if page_content is not None: 
@@ -587,21 +621,24 @@ async def search_and_add_background_references(request_body, request_headers):
             if searches == None:
                 return None
             
+            await set_status_message("Searching...")
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
+            await set_status_message("Browsing and analyzing...")
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
                 newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
                 Summaries += newSummaries
             
+            await set_status_message("Double checking sources...")
             AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
             if AreWeDone:
                 NeedsMoreSummaries = False
 
-        set_status_message("Generating answer...")
+        await set_status_message("Generating answer...")
         return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n\n"
 
 async def conversation_internal(request_body, request_headers):
