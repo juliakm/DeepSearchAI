@@ -92,12 +92,20 @@ const Chat = () => {
 
     const socket = new WebSocket(socketUrl);
 
+    socket.onopen = () => {
+        console.log('WebSocket connection established');
+    };
+
     socket.onmessage = (event) => {
         setStatusMessage(event.data); // Update the status message when a new one arrives
     };
 
     socket.onerror = (error) => {
         console.error('WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+        console.log('WebSocket connection closed');
     };
 
     return () => {

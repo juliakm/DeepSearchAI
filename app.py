@@ -72,7 +72,8 @@ def create_app():
     
     @app.before_request
     async def ensure_session_id():
-        session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
+        if 'id' not in session:
+            session['id'] = str(uuid.uuid4())  # Generate a session ID if it doesn't exist
 
     @app.websocket('/ws')
     async def ws():
@@ -83,6 +84,8 @@ def create_app():
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
+
+                print(f"WebSocket message {message}, websocket.closed: {websocket.closed}")
                 
         except Exception as e:
             print(f"WebSocket exception: {e}")
