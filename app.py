@@ -82,7 +82,7 @@ def create_app():
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
-            if page_instance_id not in clients:
+            if page_instance_id in clients:
                 del clients[page_instance_id]
 
     return app
