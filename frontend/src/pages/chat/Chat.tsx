@@ -111,7 +111,7 @@ const Chat = () => {
         console.log('Closing WebSocket connection normally...');
         socket.close();  // Cleanup on unmount
     };
-}, []);  // Empty dependency array means this effect runs once on mount
+}, []});  // Empty dependency array means this effect runs once on mount
 
   const handleErrorDialogClose = () => {
     toggleErrorDialog()
