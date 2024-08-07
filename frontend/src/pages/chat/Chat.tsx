@@ -111,9 +111,8 @@ const Chat = () => {
               socket.send(JSON.stringify({ type: 'ping' }));
           }
         }, 15000);
-    }
-
-    socket.onclose = () => { clearInterval(keepAliveInterval); }
+        socket.onclose = () => { clearInterval(keepAliveInterval); }
+    }   
 
     return () => {
         socket.close();  // Cleanup on unmount
