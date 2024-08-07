@@ -1,3 +1,4 @@
+import traceback
 import asyncio
 import copy
 import json
@@ -75,6 +76,9 @@ def create_app():
         page_instance_id = str(uuid.uuid4())
 
         clients[page_instance_id] = websocket._get_current_object()
+        clientstr = ",".join(clients.keys)
+        logging.error(f"Added client {page_instance_id} to clients list: {clientstr}")
+
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
@@ -83,7 +87,9 @@ def create_app():
             logging.error(f"WebSocket exception: {e}")
         finally:
             if page_instance_id in clients:
-                del clients[page_instance_id]
+                clientstr = ",".join(clients.keys)
+                logging.error(f"Was about to delete {page_instance_id} from Clients: {clientstr}. Call stack: {traceback.print_stack()}")
+                #del clients[page_instance_id]
 
     return app
 

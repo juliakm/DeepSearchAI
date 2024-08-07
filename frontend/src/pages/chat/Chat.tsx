@@ -104,6 +104,17 @@ const Chat = () => {
       console.error('WebSocket error:', error);
     }
 
+    socket.onopen = () => {
+        // Send a ping every 30 seconds to keep the connection alive
+        const keepAliveInterval = setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 15000);
+    }
+
+    socket.onclose = () => { clearInterval(keepAliveInterval); }
+
     return () => {
         socket.close();  // Cleanup on unmount
     };
