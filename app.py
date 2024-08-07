@@ -72,6 +72,7 @@ def create_app():
 
     @app.websocket('/ws')
     async def ws():
+        lock = asyncio.Lock()
         page_instance_id = str(uuid.uuid4())
 
         logging.error(f"We got a live one! {page_instance_id}")
