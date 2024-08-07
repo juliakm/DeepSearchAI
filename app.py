@@ -73,6 +73,9 @@ def create_app():
     @app.websocket('/ws')
     async def ws():
         page_instance_id = str(uuid.uuid4())
+        
+        print(f"We got a live one! {page_instance_id}")
+
         clients[page_instance_id] = websocket._get_current_object()
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
