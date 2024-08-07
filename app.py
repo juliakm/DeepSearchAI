@@ -495,7 +495,6 @@ async def send_private_chat(request_body, request_headers, system_preamble = Non
         response.timeout = None
         response.mimetype = "application/json-lines"
         response_raw = await response.get_data()
-        response.close()
         combined_json = process_raw_response(response_raw) 
         return combined_json["messages"][0]["content"]
 
@@ -554,7 +553,6 @@ async def fetch_and_parse_url(url):
     if response.status_code == 200:  # Raise an error for bad status codes
         # Parse the web page
         soup = BeautifulSoup(response.content, 'html.parser')
-        response.close()
         # Extract the main content
         paragraphs = soup.find_all('p')
         # Combine the text from the paragraphs
