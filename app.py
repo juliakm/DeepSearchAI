@@ -56,12 +56,12 @@ async def set_status_message(message, page_instance_id):
         await clients[page_instance_id].send(message)
     else:
         clientstr = ", ".join(clients.keys())
-        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}", file=sys.stdout)
+        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
     app.secret_key = os.urandom(24)  # Generates a random secret key
-    app.register_blueprint(bp, file=sys.stdout)
+    app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     # Manually add CORS headers to each response
@@ -74,24 +74,25 @@ def create_app():
 
     @app.websocket('/ws')
     async def ws():
+        logging.warn("WebSocket connection established.")
         lock = asyncio.Lock()
         page_instance_id = str(uuid.uuid4())
 
         clients[page_instance_id] = websocket._get_current_object()
         clientstr = ",".join(clients.keys())
-        logging.warn(f"Added client {page_instance_id} to clients list: {clientstr}", file=sys.stdout)
+        logging.warn(f"Added client {page_instance_id} to clients list: {clientstr}")
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
-                logging.warn(f"Message from client {page_instance_id}: {message}", file=sys.stdout)              
+                logging.warn(f"Message from client {page_instance_id}: {message}")              
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                logging.warn(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.", file=sys.stdout)
+                logging.warn(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.")
                 #del clients[page_instance_id]
 
     return app
@@ -608,7 +609,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            logging.warn("\n\nMore information was needed, searching again.\n\n", file=sys.stdout)
+            logging.warn("\n\nMore information was needed, searching again.\n\n")
 
             return False
         else:
