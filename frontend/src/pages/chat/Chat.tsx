@@ -102,7 +102,10 @@ const Chat = () => {
 
     socket.onerror = (error) => {
         console.error('WebSocket error:', error);
-    };
+        
+    socket.onclose = (event) => { console.log('WebSocket closed:', event); };
+
+    socket.onopen = () => { console.log('WebSocket opened.'); };
 
     return () => {
         console.log('Closing WebSocket connection normally...');
