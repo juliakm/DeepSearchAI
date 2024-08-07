@@ -54,7 +54,7 @@ async def set_status_message(message, page_instance_id):
         await clients[page_instance_id].send(message)
     else:
         clientstr = ", ".join(clients.keys())
-        logging.error(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
+        logging.information(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
@@ -77,7 +77,7 @@ def create_app():
 
         clients[page_instance_id] = websocket._get_current_object()
         clientstr = ",".join(clients.keys())
-        logging.error(f"Added client {page_instance_id} to clients list: {clientstr}")
+        logging.information(f"Added client {page_instance_id} to clients list: {clientstr}")
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
@@ -88,7 +88,7 @@ def create_app():
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                logging.error(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am.")
+                logging.information(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am.")
                 #del clients[page_instance_id]
 
     return app
@@ -448,10 +448,10 @@ def process_raw_response(raw_content):
                     combined_content += content
         
         except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
+            logging.error(f"JSON decode error: {e}")
             continue
         except Exception as e:
-            print(f"Error processing object: {e}")
+            logging.error(f"Error processing object: {e}")
             continue
         
     # Add combined content to the final JSON structure
@@ -484,7 +484,7 @@ async def search_bing(search):
             search_results = response.json().get("webPages", {}).get("value", [])
             return search_results
         except Exception as e:
-            print(f"Error: {e}")
+            logging.error(f"Error: {e}")
             return None
         
 async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
@@ -605,7 +605,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            print("\n\nMore information was needed, searching again.\n\n")
+            logging.information("\n\nMore information was needed, searching again.\n\n")
 
             return False
         else:
