@@ -1,5 +1,4 @@
 import asyncio
-import aiohttp
 import copy
 import json
 import os
@@ -547,19 +546,18 @@ async def get_urls_to_browse(request_body, request_headers, searches):
             return URLsToBrowse
 
 async def fetch_and_parse_url(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:  # Raise an error for bad status codes
-                # Parse the web page
-                content = await response.text()
-                soup = BeautifulSoup(response.content, 'html.parser')
-                # Extract the main content
-                paragraphs = soup.find_all('p')
-                # Combine the text from the paragraphs
-                content = ' '.join(paragraph.get_text() for paragraph in paragraphs)
-                return content
-            else:
-                return None
+    response = requests.get(url)
+    if response.status_code == 200:  # Raise an error for bad status codes
+        # Parse the web page
+        soup = BeautifulSoup(response.content, 'html.parser')
+        response.close()
+        # Extract the main content
+        paragraphs = soup.find_all('p')
+        # Combine the text from the paragraphs
+        content = ' '.join(paragraph.get_text() for paragraph in paragraphs)
+        return content
+    else:
+        return None
 
 async def get_article_summaries(request_body, request_headers, URLsToBrowse):
         Summaries = None
