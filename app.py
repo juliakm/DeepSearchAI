@@ -1,3 +1,4 @@
+import traceback
 import asyncio
 import copy
 import json
@@ -54,7 +55,7 @@ async def set_status_message(message, page_instance_id):
         await clients[page_instance_id].send(message)
     else:
         clientstr = ", ".join(clients.keys())
-        logging.information(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
+        logging.info(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
@@ -77,18 +78,19 @@ def create_app():
 
         clients[page_instance_id] = websocket._get_current_object()
         clientstr = ",".join(clients.keys())
-        logging.information(f"Added client {page_instance_id} to clients list: {clientstr}")
+        logging.info(f"Added client {page_instance_id} to clients list: {clientstr}")
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
-                message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out              
+                message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
+                logging.info(f"Message from client {page_instance_id}: {message}")              
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                logging.information(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am.")
+                logging.info(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am. But why were we in finally??")
                 #del clients[page_instance_id]
 
     return app
@@ -605,7 +607,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            logging.information("\n\nMore information was needed, searching again.\n\n")
+            logging.info("\n\nMore information was needed, searching again.\n\n")
 
             return False
         else:

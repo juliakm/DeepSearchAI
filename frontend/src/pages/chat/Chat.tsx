@@ -93,7 +93,14 @@ const Chat = () => {
 
     const socket = new WebSocket(socketUrl);
 
+    const keepAliveInterval = setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 5000);
+
     socket.onmessage = (event) => {
+      console.log('WebSocket message:', event.data);
       if (event.data.startsWith('page_instance_id='))
         setPageInstanceId(event.data.replace("page_instance_id=", ""));
       else
@@ -105,17 +112,20 @@ const Chat = () => {
     }
 
     socket.onopen = () => {
-        // Send a ping every 30 seconds to keep the connection alive
-        const keepAliveInterval = setInterval(() => {
-          if (socket.readyState === WebSocket.OPEN) {
-              socket.send(JSON.stringify({ type: 'ping' }));
-          }
-        }, 15000);
-        socket.onclose = () => { clearInterval(keepAliveInterval); }
-    }   
+      console.log('WebSocket connection for status established.');
+    };
+
+    socket.onclose = () => {
+        clearInterval(keepAliveInterval);
+        console.log('WebSocket connection for status closed.');
+    };
 
     return () => {
-        socket.close();  // Cleanup on unmount
+      console.log("Returning from useEffect cleanup");
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+          socket.close();  // Gracefully close the connection
+      }
+      clearInterval(keepAliveInterval);
     };
 }, []);  // Empty dependency array means this effect runs once on mount
 
