@@ -612,17 +612,24 @@ async def search_and_add_background_references(request_body, request_headers):
         page_instance_id = request_body["page_instance_id"]
 
         while NeedsMoreSummaries:
+
+            print("About to identify searches")
+
             searches = await identify_searches(request_body, request_headers)
             if searches == None:
                 await set_status_message("Generating answer...", page_instance_id)
                 return None
             
+            print("About to notify of search")
             await set_status_message("Searching...", page_instance_id)
+            print("Notified of search")
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
+            print("About to notify of search and browse")
             await set_status_message("Browsing and analyzing...", page_instance_id)
+            print("Notfied of search and browse")
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
