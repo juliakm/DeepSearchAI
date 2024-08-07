@@ -28,12 +28,17 @@ jobs:
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install --upgrade gunicorn uvicorn
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip * .[^.]* -x "venv/*" ".github/*" ".git/*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -65,9 +70,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_3BC4834FE1D440A2BC51546AFE0AF50A }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_EB723B6BFA6842868CE386AE9D7E781F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D60EC0529FBE45588511B8238B54132C }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_F30F5ECE332142AB826F0A2BB3ACA11A }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_8F96FD776DD046F8B958C7502B8B6AC3 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DD866BB3878E407D9CF1EEA5312F73E5 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -75,4 +80,4 @@ jobs:
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
-          
+          package: release.zip
