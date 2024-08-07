@@ -56,7 +56,7 @@ async def set_status_message(message, page_instance_id):
         await clients[page_instance_id].send(message)
     else:
         clientstr = ", ".join(clients.keys())
-        print(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}", file=sys.stdout)
+        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}", file=sys.stdout)
 
 def create_app():
     app = Quart(__name__)
@@ -79,19 +79,19 @@ def create_app():
 
         clients[page_instance_id] = websocket._get_current_object()
         clientstr = ",".join(clients.keys())
-        print(f"Added client {page_instance_id} to clients list: {clientstr}", file=sys.stdout)
+        logging.warn(f"Added client {page_instance_id} to clients list: {clientstr}", file=sys.stdout)
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
-                print(f"Message from client {page_instance_id}: {message}", file=sys.stdout)              
+                logging.warn(f"Message from client {page_instance_id}: {message}", file=sys.stdout)              
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                print(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.", file=sys.stdout)
+                logging.warn(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.", file=sys.stdout)
                 #del clients[page_instance_id]
 
     return app
@@ -608,7 +608,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            print("\n\nMore information was needed, searching again.\n\n", file=sys.stdout)
+            logging.warn("\n\nMore information was needed, searching again.\n\n", file=sys.stdout)
 
             return False
         else:
