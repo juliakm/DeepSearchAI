@@ -1,6 +1,7 @@
 .venv
 frontend/node_modules
 .env
+.azure-env-vars-NOT_PUBLISHED_WITH_BUILD_HERE_FOR_REFERENCE.json
 # static
 .azure/
 __pycache__/
