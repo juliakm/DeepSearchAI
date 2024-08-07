@@ -73,7 +73,7 @@ def create_app():
     @app.websocket('/ws')
     async def ws():
         page_instance_id = str(uuid.uuid4())
-        
+
         print(f"We got a live one! {page_instance_id}")
 
         clients[page_instance_id] = websocket._get_current_object()
@@ -495,6 +495,7 @@ async def send_private_chat(request_body, request_headers, system_preamble = Non
         response.timeout = None
         response.mimetype = "application/json-lines"
         response_raw = await response.get_data()
+        response.close()
         combined_json = process_raw_response(response_raw) 
         return combined_json["messages"][0]["content"]
 
