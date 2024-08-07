@@ -50,6 +50,7 @@ status_message = {}
 clients = {}
 
 async def set_status_message(message, page_instance_id):
+    lock = asyncio.Lock()
     if page_instance_id in clients:
         await clients[page_instance_id].send(message)
     else:
