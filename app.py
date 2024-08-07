@@ -55,7 +55,7 @@ async def set_status_message(message, page_instance_id):
         await clients[page_instance_id].send(message)
     else:
         clientstr = ", ".join(clients.keys())
-        logging.info(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
+        print(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
@@ -78,19 +78,19 @@ def create_app():
 
         clients[page_instance_id] = websocket._get_current_object()
         clientstr = ",".join(clients.keys())
-        logging.info(f"Added client {page_instance_id} to clients list: {clientstr}")
+        print(f"Added client {page_instance_id} to clients list: {clientstr}")
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
-                logging.info(f"Message from client {page_instance_id}: {message}")              
+                print(f"Message from client {page_instance_id}: {message}")              
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                logging.info(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am. But why were we in finally??")
+                print(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.")
                 #del clients[page_instance_id]
 
     return app
@@ -126,7 +126,7 @@ DEBUG = os.environ.get("DEBUG", "false")
 if DEBUG.lower() == "true":
     logging.basicConfig(level=logging.WARNING) # Make logging.DEBUG to see heavy debugging...
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=print)
 
 logging.getLogger('openai._base_client').setLevel(logging.WARNING)
 logging.getLogger('httpcore.connection').setLevel(logging.WARNING)
@@ -607,7 +607,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            logging.info("\n\nMore information was needed, searching again.\n\n")
+            print("\n\nMore information was needed, searching again.\n\n")
 
             return False
         else:
