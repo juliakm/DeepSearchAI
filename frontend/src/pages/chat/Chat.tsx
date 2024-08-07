@@ -105,6 +105,7 @@ const Chat = () => {
     };
 
     return () => {
+        console.log('Closing WebSocket connection normally...');
         socket.close();  // Cleanup on unmount
     };
 }, []);  // Empty dependency array means this effect runs once on mount
