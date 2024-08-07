@@ -94,6 +94,7 @@ const Chat = () => {
     const socket = new WebSocket(socketUrl);
 
     socket.onmessage = (event) => {
+      console.log("Message received: ", event.data);
       if (event.data.startsWith('page_instance_id='))
         setPageInstanceId(event.data.replace("page_instance_id=", ""));
       else

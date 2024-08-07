@@ -50,11 +50,11 @@ clients = {}
 
 async def set_status_message(message, page_instance_id):
     clientstr = ", ".join(clients.keys())
-    print(f"Page instance ID {page_instance_id} in clients? Here were its actual values: {clientstr}")
+    logging.error(f"Page instance ID {page_instance_id} in clients? Here were its actual values: {clientstr}")
     if page_instance_id in clients:
         await clients[page_instance_id].send(message)
     else:
-        print(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
+        logging.error(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
@@ -74,17 +74,18 @@ def create_app():
     async def ws():
         page_instance_id = str(uuid.uuid4())
 
-        print(f"We got a live one! {page_instance_id}")
+        logging.error(f"We got a live one! {page_instance_id}")
 
         clients[page_instance_id] = websocket._get_current_object()
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out              
+                logging.error(f"Shouldn't get here. What was the message?? Message: {message}")
         except Exception as e:
-            print(f"WebSocket exception: {e}")
+            logging.error(f"WebSocket exception: {e}")
         finally:
-            print(f"WebSocket closing for page_instance_id: {page_instance_id}")
+            logging.error(f"WebSocket closing for page_instance_id: {page_instance_id}")
             if page_instance_id not in clients:
                 del clients[page_instance_id]
 
