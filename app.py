@@ -1,4 +1,3 @@
-import traceback
 import asyncio
 import copy
 import json
@@ -89,7 +88,7 @@ def create_app():
         finally:
             if page_instance_id in clients:
                 clientstr = ",".join(clients.keys())
-                logging.error(f"Was about to delete {page_instance_id} from Clients: {clientstr}. Call stack: {traceback.print_stack()}")
+                logging.error(f"Was about to delete {page_instance_id} from Clients: {clientstr}. But I'm not, just to show how cool I am.")
                 #del clients[page_instance_id]
 
     return app
