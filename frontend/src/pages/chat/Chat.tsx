@@ -94,7 +94,6 @@ const Chat = () => {
     const socket = new WebSocket(socketUrl);
 
     socket.onmessage = (event) => {
-      console.log("Message received: ", event.data);
       if (event.data.startsWith('page_instance_id='))
         setPageInstanceId(event.data.replace("page_instance_id=", ""));
       else
@@ -104,13 +103,8 @@ const Chat = () => {
     socket.onerror = (error) => {
       console.error('WebSocket error:', error);
     }
-        
-    socket.onclose = (event) => { console.log('WebSocket closed:', event); };
-
-    socket.onopen = () => { console.log('WebSocket opened.'); };
 
     return () => {
-        console.log('Closing WebSocket connection normally...');
         socket.close();  // Cleanup on unmount
     };
 }, []);  // Empty dependency array means this effect runs once on mount
@@ -184,6 +178,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
+    setStatusMessage("Generating answer...")
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -308,6 +303,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
+    setStatusMessage("Generating answer...")
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()

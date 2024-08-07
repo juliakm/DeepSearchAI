@@ -49,11 +49,10 @@ status_message = {}
 clients = {}
 
 async def set_status_message(message, page_instance_id):
-    clientstr = ", ".join(clients.keys())
-    logging.error(f"Page instance ID {page_instance_id} in clients? Here were its actual values: {clientstr}")
     if page_instance_id in clients:
         await clients[page_instance_id].send(message)
     else:
+        clientstr = ", ".join(clients.keys())
         logging.error(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
@@ -75,18 +74,14 @@ def create_app():
         lock = asyncio.Lock()
         page_instance_id = str(uuid.uuid4())
 
-        logging.error(f"We got a live one! {page_instance_id}")
-
         clients[page_instance_id] = websocket._get_current_object()
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out              
-                logging.error(f"Shouldn't get here. What was the message?? Message: {message}")
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
-            logging.error(f"WebSocket closing for page_instance_id: {page_instance_id}")
             if page_instance_id not in clients:
                 del clients[page_instance_id]
 
@@ -618,23 +613,17 @@ async def search_and_add_background_references(request_body, request_headers):
 
         while NeedsMoreSummaries:
 
-            print("About to identify searches")
-
             searches = await identify_searches(request_body, request_headers)
             if searches == None:
                 await set_status_message("Generating answer...", page_instance_id)
                 return None
             
-            print("About to notify of search")
             await set_status_message("Searching...", page_instance_id)
-            print("Notified of search")
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
-            print("About to notify of search and browse")
             await set_status_message("Browsing and analyzing...", page_instance_id)
-            print("Notfied of search and browse")
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
