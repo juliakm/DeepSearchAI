@@ -1,6 +1,10 @@
-# [Preview] UUFSolver
+# [Preview] DeepSearchChat
 
-This app is built on the Sample Chat App with AOAI GitHub project from which it is forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat. It will automatically start the conversation with **Article** and **Feedback** (or any similarly named) parameters that represent the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback. It then gives its best suggestion to resolve/address the feedback, with reference links to validate ground truth on its claims. It will also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them.
+This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat. 
+
+It will automatically starts a conversation with the any contents given to the URL query string (for instance, in its first use case, the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback). It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims. 
+
+It is flexible enough given a good front end system prompt (configured with an [environment variable](#environment-variables)) to also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them. This makes the query string a good way to embed chat links that start conversations with specific details we want to have it review and answer.
 
 Note: some portions of the app use preview APIs.
 
