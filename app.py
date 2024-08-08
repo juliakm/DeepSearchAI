@@ -92,7 +92,7 @@ def create_app():
         page_instance_id = str(uuid.uuid4())
 
         async with clients_lock:
-            clients[page_instance_id] = websocket._get_current_object()
+            clients[page_instance_id] = websocket
             clientstr = ",".join(clients.keys())
             logging.warning(f"Added client {page_instance_id} to clients list: {clientstr}")
 
