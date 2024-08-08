@@ -64,7 +64,7 @@ clients = {}
 
 async def set_status_message(message, page_instance_id):
     if page_instance_id in clients:
-        websocket_client = clients[page_instance_id]
+        websocket_client = clients[page_instance_id]._get_current_object()
         try:
             await websocket_client.send(message)
         except Exception as e:
@@ -92,7 +92,7 @@ def create_app():
     async def ws():
         page_instance_id = str(uuid.uuid4())
         await websocket.accept()
-        clients[page_instance_id] = websocket._get_current_object()
+        clients[page_instance_id] = websocket
         logging.warn(f"WebSocket connection established with ID: {page_instance_id}")
 
         try:

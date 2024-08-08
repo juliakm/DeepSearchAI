@@ -97,7 +97,7 @@ const Chat = () => {
       if (socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({ type: 'ping' }));
       }
-    }, 5000);
+    }, 15000);
 
     socket.onmessage = (event) => {
       console.log('WebSocket message:', event.data);
