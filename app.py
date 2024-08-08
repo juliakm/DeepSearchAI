@@ -69,8 +69,7 @@ async def set_status_message(message, page_instance_id):
         except Exception as e:
             logging.error(f"Failed to send message to {page_instance_id}: {e}")
     else:
-        clientstr = ", ".join(clients.keys())
-        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Available clients: {clientstr}")
+        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Available clients: {clients}")
 
 
 def create_app():
@@ -92,7 +91,7 @@ def create_app():
         page_instance_id = str(uuid.uuid4())
         await websocket.accept()
         clients[page_instance_id] = websocket._get_current_object()
-        logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}")
+        logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}\nIs page_instance_id in clients? {page_instance_id in clients}")
 
         try:
             await websocket.send(f"page_instance_id={page_instance_id}")
