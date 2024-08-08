@@ -44,19 +44,33 @@ from backend.utils import (
     format_pf_non_streaming_response,
 )
 
+# Debug settings
+DEBUG = os.environ.get("DEBUG", "false")
+if DEBUG.lower() == "true":
+    logging.basicConfig(level=logging.infoING) # Make logging.DEBUG to see heavy debugging...
+else:
+    logging.basicConfig(level=print)
+
+logging.getLogger('openai._base_client').setLevel(logging.infoING)
+logging.getLogger('httpcore.connection').setLevel(logging.infoING)
+logging.getLogger('httpcore').setLevel(logging.infoING)
+logging.getLogger('httpx').setLevel(logging.infoING)
+logging.getLogger('root').setLevel(logging.INFO)
+
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
 # Status handling
 status_message = {}
 clients = {}
+clients_lock = asyncio.Lock()
 
 async def set_status_message(message, page_instance_id):
-    lock = asyncio.Lock()
-    if page_instance_id in clients:
-        await clients[page_instance_id].send(message)
-    else:
-        clientstr = ", ".join(clients.keys())
-        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
+    async with clients_lock:
+        if page_instance_id in clients:
+            await clients[page_instance_id].send(message)
+        else:
+            clientstr = ", ".join(clients.keys())
+            logging.info(f"Page instance ID {page_instance_id} not found in clients. Here were its actual values: {clientstr}")
 
 def create_app():
     app = Quart(__name__)
@@ -74,26 +88,28 @@ def create_app():
 
     @app.websocket('/ws')
     async def ws():
-        logging.warn("WebSocket connection established.")
-        lock = asyncio.Lock()
+        logging.info("WebSocket connection established.")
         page_instance_id = str(uuid.uuid4())
 
-        clients[page_instance_id] = websocket._get_current_object()
-        clientstr = ",".join(clients.keys())
-        logging.warn(f"Added client {page_instance_id} to clients list: {clientstr}")
+        async with clients_lock:
+            clients[page_instance_id] = websocket._get_current_object()
+            clientstr = ",".join(clients.keys())
+            logging.info(f"Added client {page_instance_id} to clients list: {clientstr}")
 
         await clients[page_instance_id].send(f"page_instance_id={page_instance_id}")
         try:
             while True:
                 message = await websocket.receive()  # Keep the connection open, ignore all messages since we're only sending out
-                logging.warn(f"Message from client {page_instance_id}: {message}")              
+                logging.info(f"Message from client {page_instance_id}: {message}")              
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
-            if page_instance_id in clients:
-                clientstr = ",".join(clients.keys())
-                logging.warn(f"Deleting {page_instance_id} Clients list: [{clientstr}] on close.")
-                #del clients[page_instance_id]
+            async with clients_lock:
+                if page_instance_id in clients:
+                    logging.info(f"Deleting {page_instance_id} from clients list.")
+                    del clients[page_instance_id]
+                    clientstr = ",".join(clients.keys())
+                    logging.info(f"Remaining clients: {clientstr}")
 
     return app
 
@@ -123,21 +139,7 @@ async def mslearnguy():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-# Debug settings
-DEBUG = os.environ.get("DEBUG", "false")
-if DEBUG.lower() == "true":
-    logging.basicConfig(level=logging.WARNING) # Make logging.DEBUG to see heavy debugging...
-else:
-    logging.basicConfig(level=print)
-
-logging.getLogger('openai._base_client').setLevel(logging.WARNING)
-logging.getLogger('httpcore.connection').setLevel(logging.WARNING)
-logging.getLogger('httpcore').setLevel(logging.WARNING)
-logging.getLogger('httpx').setLevel(logging.WARNING)
-logging.getLogger('root').setLevel(logging.WARNING)
-
-USER_AGENT = "GitHubSampleWebApp/AsyncAzureOpenAI/1.0.0"
-
+USER_AGENT = "UUFSolver/Async/1.0.0"
 
 # Frontend Settings via Environment Variables
 frontend_settings = {
@@ -609,7 +611,7 @@ async def is_background_info_sufficient(request_body, request_headers, Summaries
         if response == "More information needed.": 
             
             #debug
-            logging.warn("\n\nMore information was needed, searching again.\n\n")
+            logging.info("\n\nMore information was needed, searching again.\n\n")
 
             return False
         else:
