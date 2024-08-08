@@ -1,4 +1,3 @@
-import traceback
 import asyncio
 import copy
 import json
@@ -100,7 +99,7 @@ def create_app():
             await websocket.send(f"page_instance_id={page_instance_id}")
             while True:
                 message = await websocket.receive()  # Receive messages
-                logging.warn(f"Received message: {message} from {page_instance_id}")
+                logging.debug(f"Received message: {message} from {page_instance_id}")
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
