@@ -107,7 +107,6 @@ const Chat = () => {
     socketRef.current = new WebSocket(socketUrl);
 
     socketRef.current.onopen = () => {
-      console.log('WebSocket connection established');
       // Set up keep-alive ping or any other initialization logic
       keepAliveIntervalRef.current = window.setInterval(() => {
           if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -794,7 +793,7 @@ const Chat = () => {
   let isInitialSearchMessagePosted = useRef(false);
 
   useEffect(() => {
-    if (!isInitialSearchMessagePosted.current && (appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success || appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Fail)) {
+    if (pageInstanceId != null && !isInitialSearchMessagePosted.current && (appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Success || appStateContext?.state.chatHistoryLoadingState == ChatHistoryLoadingState.Fail)) {
       isInitialSearchMessagePosted.current = true;
       const queryParams = new URLSearchParams(location.search);
       const entries = Array.from(queryParams.entries());
@@ -805,7 +804,7 @@ const Chat = () => {
         sendMessage(message, id);
       }
     }
-  }, [location.search, appStateContext]);
+  }, [location.search, appStateContext, pageInstanceId]);
 
   return (
     <div className={styles.container} role="main">
