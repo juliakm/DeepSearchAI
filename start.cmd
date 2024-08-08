@@ -2,6 +2,9 @@
 
 set NODE_OPTIONS=--max_old_space_size=8192
 
+echo Logging into azure
+call az login
+
 echo.
 echo Restoring backend python packages
 echo.

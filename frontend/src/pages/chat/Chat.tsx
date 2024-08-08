@@ -47,6 +47,8 @@ const enum messageStatus {
 }
 
 const Chat = () => {
+  const socketRef = useRef<WebSocket | null>(null);
+  const keepAliveIntervalRef = useRef<number | undefined>(undefined);
   const [statusMessage, setStatusMessage] = useState('Generating answer...');
   const [pageInstanceId, setPageInstanceId] = useState<string | null>(null);
   const appStateContext = useContext(AppStateContext)
@@ -97,23 +99,24 @@ const Chat = () => {
   };
 
   useEffect(() => {
-    console.log("Current Protocol:", window.location.protocol);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    console.log("Selected WebSocket Protocol:", protocol);
     const host = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
     const socketUrl = `${protocol}//${host}${port}/ws`;
 
-    const socket = new WebSocket(socketUrl);
+    socketRef.current = new WebSocket(socketUrl);
 
-    const keepAliveInterval = setInterval(() => {
-      if (socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ type: 'ping' }));
-      }
-    }, 15000);
+    socketRef.current.onopen = () => {
+      console.log('WebSocket connection established');
+      // Set up keep-alive ping or any other initialization logic
+      keepAliveIntervalRef.current = window.setInterval(() => {
+          if (socketRef.current?.readyState === WebSocket.OPEN) {
+              socketRef.current.send('ping');
+          }
+      }, 20000); // Example: send a ping every 30 seconds
+    };
 
-    socket.onmessage = (event) => {
-      console.log('WebSocket message:', event.data);
+    socketRef.current.onmessage = (event) => {
       if (event.data.startsWith('page_instance_id=')) {
         setPageInstanceId(event.data.replace("page_instance_id=", ""));
       }
@@ -121,25 +124,17 @@ const Chat = () => {
         setStatusMessage(event.data); // Update the status message when a new one arrives
     };
 
-    socket.onerror = (error) => {
+    socketRef.current.onerror = (error) => {
       console.error('WebSocket error:', error);
     }
 
-    socket.onopen = () => {
-      console.log('WebSocket connection for status established.');
-    };
-
-    socket.onclose = () => {
-        clearInterval(keepAliveInterval);
-        console.log('WebSocket connection for status closed.');
-    };
-
     return () => {
-      console.log("Returning from useEffect cleanup");
-      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-          socket.close();  // Gracefully close the connection
+      if (socketRef.current?.readyState === WebSocket.OPEN || socketRef.current?.readyState === WebSocket.CONNECTING) {
+          socketRef.current.close(); // Gracefully close the connection
       }
-      clearInterval(keepAliveInterval);
+      if (keepAliveIntervalRef.current !== undefined) {
+          clearInterval(keepAliveIntervalRef.current);
+      }
     };
 }, []);  // Empty dependency array means this effect runs once on mount
 

@@ -94,15 +94,12 @@ def create_app():
             await websocket.accept()
             await websocket.send(f"page_instance_id={page_instance_id}")
             clients[page_instance_id] = websocket._get_current_object()
-            logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}\nIs page_instance_id in clients? {page_instance_id in clients}")
-
             while True:
                 message = await websocket.receive()  # Receive messages
                 logging.debug(f"Received message: {message} from {page_instance_id}")
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
-            logging.warn(f"Cleaning up WebSocket connection for ID: {page_instance_id}")
             clients.pop(page_instance_id, None)
 
     return app
