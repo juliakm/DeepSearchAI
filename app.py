@@ -92,7 +92,7 @@ def create_app():
         page_instance_id = str(uuid.uuid4())
         await websocket.accept()
         clients[page_instance_id] = websocket._get_current_object()
-        logging.warn(f"WebSocket connection established with ID: {page_instance_id}")
+        logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}")
 
         try:
             await websocket.send(f"page_instance_id={page_instance_id}")
