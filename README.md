@@ -72,11 +72,35 @@ NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space
 NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
 
 #### Local Setup: Enable Chat History
-To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. Then specify these additional environment variables: 
+To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. You will also need to grant access to your Azure Web App's managed system identity to the Cosmos DB resource with the following command:
+
+```azurepowershell
+$resourceGroupName = '<your Cosmos DB resource group name' 
+$accountName = '<name of your Cosmos DB>'
+$subscription = '<your subscription_id>' # of the cosmos db
+
+# <your object_id> is the system assigned identity of your app
+# or for debugging on Windows, your user principal object ID in Azure.
+$principalId = '<your object_id>' 
+
+# Provides read/write access
+$ roleDefinitionId = '00000000-0000-0000-0000-000000000002' 
+
+az cosmosdb sql role assignment create --account-name $accountName --resource-group $resourceGroupName --scope "/" --principal-id $principalId --role-definition-id $roleDefinitionId --subscription $subscription
+
+# *** Optional ***
+
+# These next lines will disable key authentication on Cosmos DB (for maximum security).
+# This app uses managed identities with Entra ID to authenticate to Cosmos DB.
+
+# $cosmosdb_id="/subscriptions/<your subscription_id>/resourceGroups/<your resource group name>/providers/Microsoft.DocumentDB/databaseAccounts/<your Cosmos DB name>"
+# az resource update --ids $cosmosdb_id --set properties.disableLocalAuth=true --latest-include-preview
+```
+
+Then specify these additional environment variables: 
 - `AZURE_COSMOSDB_ACCOUNT`
 - `AZURE_COSMOSDB_DATABASE`
 - `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`
-- `AZURE_COSMOSDB_ACCOUNT_KEY`
 
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:50505. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 
