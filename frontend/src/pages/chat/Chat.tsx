@@ -48,7 +48,7 @@ const enum messageStatus {
 
 const Chat = () => {
   const [statusMessage, setStatusMessage] = useState('Generating answer...');
-  const [pageInstanceId, setPageInstanceId] = useState<string>("");
+  const [pageInstanceId, setPageInstanceId] = useState<string | null>(null);
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
   const AUTH_ENABLED = appStateContext?.state.frontendSettings?.auth_enabled
@@ -85,6 +85,17 @@ const Chat = () => {
   const [ASSISTANT, TOOL, ERROR] = ['assistant', 'tool', 'error']
   const NO_CONTENT_ERROR = 'No content in messages object.'
 
+  const waitForPageInstanceId = () => {
+    return new Promise<string>((resolve) => {
+        const interval = setInterval(() => {
+            if (pageInstanceId) {
+                clearInterval(interval);
+                resolve(pageInstanceId);
+            }
+        }, 100); // Check every 100ms
+    });
+  };
+
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
@@ -101,8 +112,9 @@ const Chat = () => {
 
     socket.onmessage = (event) => {
       console.log('WebSocket message:', event.data);
-      if (event.data.startsWith('page_instance_id='))
+      if (event.data.startsWith('page_instance_id=')) {
         setPageInstanceId(event.data.replace("page_instance_id=", ""));
+      }
       else
         setStatusMessage(event.data); // Update the status message when a new one arrives
     };
@@ -241,7 +253,8 @@ const Chat = () => {
 
     let result = {} as ChatResponse
     try {
-      const response = await conversationApi(request, abortController.signal, pageInstanceId)
+      const page_instance_id = await waitForPageInstanceId();
+      const response = await conversationApi(request, abortController.signal, page_instance_id)
       if (response?.body) {
         const reader = response.body.getReader()
 
@@ -362,6 +375,7 @@ const Chat = () => {
     let result = {} as ChatResponse
     var errorResponseMessage = 'Please try again. If the problem persists, please contact the site administrator.'
     try {
+      const pageInstanceId = await waitForPageInstanceId();
       const response = conversationId
         ? await historyGenerate(request, abortController.signal, pageInstanceId, conversationId)
         : await historyGenerate(request, abortController.signal, pageInstanceId)
