@@ -97,7 +97,9 @@ const Chat = () => {
   };
 
   useEffect(() => {
+    console.log("Current Protocol:", window.location.protocol);
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    console.log("Selected WebSocket Protocol:", protocol);
     const host = window.location.hostname;
     const port = window.location.port ? `:${window.location.port}` : '';
     const socketUrl = `${protocol}//${host}${port}/ws`;

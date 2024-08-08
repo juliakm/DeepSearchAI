@@ -89,12 +89,13 @@ def create_app():
     @app.websocket('/ws')
     async def ws():
         page_instance_id = str(uuid.uuid4())
-        await websocket.accept()
-        clients[page_instance_id] = websocket._get_current_object()
-        logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}\nIs page_instance_id in clients? {page_instance_id in clients}")
-
+        
         try:
+            await websocket.accept()
             await websocket.send(f"page_instance_id={page_instance_id}")
+            clients[page_instance_id] = websocket._get_current_object()
+            logging.warn(f"WebSocket connection established with ID: {page_instance_id}. New clients list: {clients}\nIs page_instance_id in clients? {page_instance_id in clients}")
+
             while True:
                 message = await websocket.receive()  # Receive messages
                 logging.debug(f"Received message: {message} from {page_instance_id}")
