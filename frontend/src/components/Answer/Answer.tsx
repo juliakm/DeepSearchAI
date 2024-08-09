@@ -31,16 +31,28 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     setIsHovered(true);
   };
 
-  const copyToClipboard = () => {
-    const markdownContent = parsedAnswer.markdownFormatText;
-    navigator.clipboard.writeText(markdownContent).then(
-      () => {
-        console.log("Markdown copied to clipboard!");
-      },
-      (err) => {
-        console.error("Failed to copy markdown: ", err);
+  const copyToClipboard = (outputtype:string = "") => {
+    if (outputtype == "") return;
+    let content = "";
+    if (outputtype == "markdown") content = parsedAnswer.markdownFormatText;
+    if (outputtype == "text") content = document.querySelector(`.${styles.answerContainer}`)?.textContent || "";
+    if (outputtype == "html") {
+      const element = document.querySelector(`.${styles.answerContainer}`);
+      if (element) {
+        const blob = new Blob([element.innerHTML], { type: 'text/html' });
+        const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
+        navigator.clipboard.write(htmlcontent);
       }
-    );
+    } else {
+      navigator.clipboard.writeText(content).then(
+        () => {
+          console.log("Markdown copied to clipboard!");
+        },
+        (err) => {
+          console.error("Failed to copy markdown: ", err);
+        }
+      );
+    }
   };
 
   const handleMouseLeave = () => {
@@ -282,22 +294,48 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 components={components}
               />
             </Stack.Item>
-            {/*isHovered && (
-            <Stack.Item className={styles.copyButtonContainer} styles={{root:{ position:'relative', top: '10px', left: '10px', width: '100%'}}}>
+            {isHovered && (
+            <Stack.Item className={styles.copyButtonContainer} styles = {{root:{position:'relative'}}}>
               <DefaultButton
+                title="Copy markdown to text"
                 iconProps={{ iconName: "Copy" }}
-                onClick={copyToClipboard}
+                onClick={copyToClipboard.bind(this, "text")}
+                onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
+                onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
+                ariaLabel="Copy text to clipboard"
+                styles={{
+                  root: { position: 'absolute', bottom: '55px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                  icon: { fontSize: '11px' }
+                }}
+              />
+              <div style={{ position: 'absolute', bottom: '56px', left: '4px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.txt</div>
+              <DefaultButton
+                title="Copy markdown to clipboard"
+                iconProps={{ iconName: "Copy" }}
+                onClick={copyToClipboard.bind(this, "markdown")}
                 onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
                 onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
                 ariaLabel="Copy markdown to clipboard"
                 styles={{
-                  root: { position: 'absolute', bottom: '5px', left: '10px', zIndex: 1, opacity: .75, width: '30px', height: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
-                  icon: { fontSize: '8px' }
+                  root: { position: 'absolute', bottom: '20px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                  icon: { fontSize: '11px' }
                 }}
               />
-              <div style={{ position: 'absolute', top: '-15px', left: '-8px', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '10px' }}>MD</div>
-            </Stack.Item>
-            )*/}
+              <div style={{ position: 'absolute', bottom: '21px', left: '6px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.md</div>
+              <DefaultButton
+                  title="Copy html to clipboard"
+                  iconProps={{ iconName: "Copy" }}
+                  onClick={copyToClipboard.bind(this, "html")}
+                  onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
+                  onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
+                  ariaLabel="Copy html to clipboard"
+                  styles={{
+                    root: { position: 'absolute', bottom: '-15px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                    icon: { fontSize: '11px' }
+                  }}
+                />
+                <div style={{ position: 'absolute', bottom: '-14px', left: '2px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.html</div>
+            </Stack.Item>)}
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">
