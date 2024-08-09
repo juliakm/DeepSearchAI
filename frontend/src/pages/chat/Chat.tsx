@@ -49,7 +49,7 @@ const enum messageStatus {
 const Chat = () => {
   const socketRef = useRef<WebSocket | null>(null);
   const keepAliveIntervalRef = useRef<number | undefined>(undefined);
-  const [statusMessage, setStatusMessage] = useState('Generating answer...');
+  const [statusMessage, setStatusMessage] = useState('Generating answer 🔆...');
   const [pageInstanceId, setPageInstanceId] = useState<string | null>(null);
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
@@ -206,7 +206,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithoutCosmosDB = async (question: string, conversationId?: string) => {
-    setStatusMessage("Generating answer...")
+    setStatusMessage("🔆 Generating answer...")
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()
@@ -332,7 +332,7 @@ const Chat = () => {
   }
 
   const makeApiRequestWithCosmosDB = async (question: string, conversationId?: string) => {
-    setStatusMessage("Generating answer...")
+    setStatusMessage("🔆 Generating answer...")
     setIsLoading(true)
     setShowLoadingMessage(true)
     const abortController = new AbortController()

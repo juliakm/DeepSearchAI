@@ -1,4 +1,4 @@
-# [Preview] DeepSearchChat
+# [Preview] DeepSearchAI
 
 This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat. 
 

@@ -618,27 +618,27 @@ async def search_and_add_background_references(request_body, request_headers):
 
             searches = await identify_searches(request_body, request_headers)
             if searches == None:
-                await set_status_message("Generating answer...", page_instance_id)
+                await set_status_message("🔆 Generating answer...", page_instance_id)
                 return None
             
-            await set_status_message("Searching...", page_instance_id)
+            await set_status_message("🔍 Searching...", page_instance_id)
             URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
-            await set_status_message("Browsing and analyzing...", page_instance_id)
+            await set_status_message("🧠 Browsing and analyzing...", page_instance_id)
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:
                 newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
                 Summaries += newSummaries
             
-            await set_status_message("Double checking sources...", page_instance_id)
+            await set_status_message("⚡ Validating sources with Deep§earchAI™...", page_instance_id)
             AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
             if AreWeDone:
                 NeedsMoreSummaries = False
 
-        await set_status_message("Generating answer...", page_instance_id)
+        await set_status_message("🌟 Generating answer...", page_instance_id)
         return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n\n"
 
 async def conversation_internal(request_body, request_headers):

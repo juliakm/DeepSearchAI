@@ -1,4 +1,4 @@
-import { FormEvent, useContext, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useContext, useEffect, useMemo, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -24,6 +24,28 @@ interface Props {
 }
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const copyToClipboard = () => {
+    const markdownContent = parsedAnswer.markdownFormatText;
+    navigator.clipboard.writeText(markdownContent).then(
+      () => {
+        console.log("Markdown copied to clipboard!");
+      },
+      (err) => {
+        console.error("Failed to copy markdown: ", err);
+      }
+    );
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -244,7 +266,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   }
   return (
     <>
-      <Stack className={styles.answerContainer} tabIndex={0}>
+      <Stack className={styles.answerContainer} tabIndex={0} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}  >
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
@@ -260,6 +282,22 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 components={components}
               />
             </Stack.Item>
+            {/*isHovered && (
+            <Stack.Item className={styles.copyButtonContainer} styles={{root:{ position:'relative', top: '10px', left: '10px', width: '100%'}}}>
+              <DefaultButton
+                iconProps={{ iconName: "Copy" }}
+                onClick={copyToClipboard}
+                onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
+                onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
+                ariaLabel="Copy markdown to clipboard"
+                styles={{
+                  root: { position: 'absolute', bottom: '5px', left: '10px', zIndex: 1, opacity: .75, width: '30px', height: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                  icon: { fontSize: '8px' }
+                }}
+              />
+              <div style={{ position: 'absolute', top: '-15px', left: '-8px', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '10px' }}>MD</div>
+            </Stack.Item>
+            )*/}
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">

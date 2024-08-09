@@ -1,4 +1,4 @@
-# (Preview) Sample Chat App with AOAI
+# (Preview) DeepSearchAI
 
 ## Deploying with the Azure Developer CLI
 
