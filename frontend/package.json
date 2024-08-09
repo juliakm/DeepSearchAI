@@ -6,7 +6,6 @@
     "tsc": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc",
     "vite:build": "cross-env NODE_OPTIONS=--max_old_space_size=16384 vite build",
     "build": "npm run tsc && npm run vite:build",
-    "watch": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc --watch",
     "test": "jest",
     "lint": "npx eslint src",
     "lint:fix": "npx eslint --fix",

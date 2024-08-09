@@ -16,6 +16,11 @@ export default defineConfig({
     }
   },
   server: {
+    open: true, // Automatically open the browser
+    hmr: {
+      protocol: 'ws', // WebSocket protocol
+      host: 'localhost',
+    },
     proxy: {
       '/ask': 'http://localhost:5000',
       '/chat': 'http://localhost:5000'

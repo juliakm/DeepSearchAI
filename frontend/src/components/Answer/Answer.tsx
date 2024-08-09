@@ -16,6 +16,7 @@ import { AppStateContext } from '../../state/AppProvider'
 import { parseAnswer } from './AnswerParser'
 
 import styles from './Answer.module.css'
+import { set } from 'lodash'
 
 interface Props {
   answer: AskResponse
@@ -24,11 +25,29 @@ interface Props {
 }
 
 export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Props) => {
+  const [iconNameMD, setIconNameMD] = useState('Copy'); 
+  const [iconNameTXT, setIconNameTXT] = useState('Copy'); 
+  const [iconNameHTML, setIconNameHTML] = useState('Copy'); 
+  const [iconColorMD, setIconColorMD] = useState(''); // Initially no color
+  const [iconColorTXT, setIconColorTXT] = useState(''); // Initially no color
+  const [iconColorHTML, setIconColorHTML] = useState(''); // Initially no color
   const [isHovered, setIsHovered] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const hideTimeoutRef = useRef<number | null>(null);
 
   const handleMouseEnter = () => {
+    // Clear any existing timeout to prevent premature hiding
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+    }
     setIsHovered(true);
+  };
+   
+  const handleMouseLeave = () => {
+    // Set a timeout to hide the buttons after 1 second
+    hideTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 333);
   };
 
   const copyToClipboard = (outputtype:string = "") => {
@@ -42,22 +61,44 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         const blob = new Blob([element.innerHTML], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
+        setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
+        setIconColorHTML('green'); // Temporarily change the icon color to green
+        // Revert the icon back to "Copy" after 2 seconds
+        setTimeout(() => {
+          setIconNameHTML('Copy');
+          setIconColorHTML(''); // Revert the icon color back
+        }, 2000);
       }
     } else {
       navigator.clipboard.writeText(content).then(
         () => {
-          console.log("Markdown copied to clipboard!");
+          if (outputtype == "markdown") {
+            setIconNameMD('CheckMark'); // Temporarily change the icon to "CheckMark"
+            setIconColorMD('green'); // Temporarily change the icon color to green
+          }
+          if (outputtype == "text") {
+            setIconNameTXT('CheckMark'); // Temporarily change the icon to "CheckMark"
+            setIconColorTXT('green'); // Temporarily change the icon color to green
+          }
+          // Revert the icon back to "Copy" after 2 seconds
+          setTimeout(() => {
+            if (outputtype == "markdown") {
+               setIconNameMD('Copy');
+               setIconColorMD(''); // Revert the icon color back
+            }
+            if (outputtype == "text") {
+              setIconNameTXT('Copy');              
+              setIconColorTXT(''); // Revert the icon color back
+            } 
+          }, 2000);
         },
         (err) => {
-          console.error("Failed to copy markdown: ", err);
+          console.error("Failed to copy html markdown: ", err);
         }
       );
     }
   };
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-  };
   const initializeAnswerFeedback = (answer: AskResponse) => {
     if (answer.message_id == undefined) return undefined
     if (answer.feedback == undefined) return undefined
@@ -278,7 +319,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   }
   return (
     <>
-      <Stack className={styles.answerContainer} tabIndex={0} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}  >
+      <Stack className={styles.answerContainer} tabIndex={0} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{position: 'relative'}} >
         <Stack.Item>
           <Stack horizontal grow>
             <Stack.Item grow>
@@ -294,47 +335,54 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                 components={components}
               />
             </Stack.Item>
+
             {isHovered && (
-            <Stack.Item className={styles.copyButtonContainer} styles = {{root:{position:'relative'}}}>
+            <Stack.Item className={styles.copyButtonContainer} style={{position:'absolute', bottom: 0, right: 0}}>
               <DefaultButton
                 title="Copy markdown to text"
-                iconProps={{ iconName: "Copy" }}
+                iconProps={{ iconName: iconNameTXT }}
                 onClick={copyToClipboard.bind(this, "text")}
                 onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
                 onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
                 ariaLabel="Copy text to clipboard"
                 styles={{
-                  root: { position: 'absolute', bottom: '55px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
-                  icon: { fontSize: '11px' }
+                  root: { position: 'absolute', bottom: '85px', right: '-15px', marginLeft: '5px', marginRight: 'auto', zIndex: 2, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                  icon: { fontSize: '11px', color: iconColorTXT }
                 }}
               />
-              <div style={{ position: 'absolute', bottom: '56px', left: '4px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.txt</div>
+              <div onClick={copyToClipboard.bind(this, "text")} title="Copy text to clipboard" style={{ position: 'absolute', bottom: '86px', right: '-8px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 3, cursor: 'pointer' }}>
+                txt
+              </div>
               <DefaultButton
                 title="Copy markdown to clipboard"
-                iconProps={{ iconName: "Copy" }}
+                iconProps={{ iconName: iconNameMD }}
                 onClick={copyToClipboard.bind(this, "markdown")}
                 onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
                 onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
                 ariaLabel="Copy markdown to clipboard"
                 styles={{
-                  root: { position: 'absolute', bottom: '20px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
-                  icon: { fontSize: '11px' }
+                  root: { position: 'absolute', bottom: '52px', right: '-15px', marginLeft: '5px', marginRight: 'auto', zIndex: 2, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                  icon: { fontSize: '11px', color: iconColorMD }
                 }}
               />
-              <div style={{ position: 'absolute', bottom: '21px', left: '6px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.md</div>
+              <div onClick={copyToClipboard.bind(this, "markdown")} title="Copy markdown to clipboard" style={{ position: 'absolute', bottom: '53px', right: '-5px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 3, cursor: 'pointer' }}>
+                md
+              </div>
               <DefaultButton
                   title="Copy html to clipboard"
-                  iconProps={{ iconName: "Copy" }}
+                  iconProps={{ iconName: iconNameHTML }}
                   onClick={copyToClipboard.bind(this, "html")}
                   onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
                   onMouseLeave={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '.75'; }}}
                   ariaLabel="Copy html to clipboard"
                   styles={{
-                    root: { position: 'absolute', bottom: '-15px', left: '-5px', marginLeft: '5px', marginRight: 'auto', zIndex: 1, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
-                    icon: { fontSize: '11px' }
+                    root: { position: 'absolute', bottom: '20px', right: '-15px', marginLeft: '5px', marginRight: 'auto', zIndex: 2, opacity: .75, width: '30px', height: '30px', minWidth: '30px', padding: '0px', borderRadius: '8%', backgroundColor: 'white', boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)', cursor: 'pointer' },
+                    icon: { fontSize: '11px', color: iconColorHTML }
                   }}
                 />
-                <div style={{ position: 'absolute', bottom: '-14px', left: '2px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 1, cursor: 'pointer' }}>.html</div>
+                <div onClick={copyToClipboard.bind(this, "html")} title="Copy html to clipboard" style={{ position: 'absolute', bottom: '21px', right: '-12px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 3, cursor: 'pointer' }}>
+                  html
+                </div>
             </Stack.Item>)}
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (

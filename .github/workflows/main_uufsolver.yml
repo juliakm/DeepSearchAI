@@ -55,7 +55,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -66,12 +66,11 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
-      - name: Login to Azure
+      - name: Login to Azure using Federated Credentials
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E7878969692842A5BED6CBF544F9BE32 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_66F3D95AC81A47BB988FD0BA6DB0467D }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9342949F174E4FD6AECE0F1EFACDA0C3 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -80,4 +79,3 @@ jobs:
           app-name: 'UUFSolver'
           slot-name: 'Production'
           package: release.zip
-          
