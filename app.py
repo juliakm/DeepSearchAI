@@ -633,7 +633,7 @@ async def search_and_add_background_references(request_body, request_headers):
                 newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
                 Summaries += newSummaries
             
-            await set_status_message("⚡ Validating sources with Deep§earchAI™ (New) (For home and office)...", page_instance_id)
+            await set_status_message("⚡ Validating sources with Deep§earchAI™ - Preview (New) (For home and office)...", page_instance_id)
             AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
             if AreWeDone:
                 NeedsMoreSummaries = False
