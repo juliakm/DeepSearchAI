@@ -626,7 +626,7 @@ async def search_and_add_background_references(request_body, request_headers):
             if URLsToBrowse == "Search error.": 
                 return "Search error."       
 
-            await set_status_message("🧠 Browsing and analyzing...", page_instance_id)
+            await set_status_message("🕵️‍♂️ Browsing and analyzing...", page_instance_id)
             if (Summaries is None):
                 Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
             else:

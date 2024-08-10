@@ -336,10 +336,10 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
               />
             </Stack.Item>
 
-            {isHovered && (
+            {(isHovered && answer.answer.slice(-3) != "...") && (
             <Stack.Item className={styles.copyButtonContainer} style={{position:'absolute', bottom: 0, right: 0}}>
               <DefaultButton
-                title="Copy markdown to text"
+                title={"Copy markdown to text"}
                 iconProps={{ iconName: iconNameTXT }}
                 onClick={copyToClipboard.bind(this, "text")}
                 onMouseEnter={()=> { if (buttonRef.current) { buttonRef.current.style.opacity = '1'; }}}
