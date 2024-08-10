@@ -58,7 +58,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     if (outputtype == "html") {
       const element = document.querySelector(`.${styles.answerContainer}`);
       if (element) {
-        const blob = new Blob([element.innerHTML], { type: 'text/html' });
+        const blob = new Blob([element.outerHTML], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
         setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
