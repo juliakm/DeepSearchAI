@@ -1,33 +1,30 @@
 # [Preview] DeepSearchAI
 
-This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat. 
+This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat.
 
-It will automatically starts a conversation with the any contents given to the URL query string (for instance, in its first use case, the URL of a [Learn](https://learn.microsoft.com) article, and its associated feedback). It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims. 
-
-It is flexible enough given a good front end system prompt (configured with an [environment variable](#environment-variables)) to also accept raw text pasted from a UUF feedback item description, which contains **Live URL** and **Verbatim** fields, and do the same with them. This makes the query string a good way to embed chat links that start conversations with specific details we want to have it review and answer.
-
-Note: some portions of the app use preview APIs.
+It will automatically starts a conversation with the any contents given to the URL query string, allowing you to embed links with predefined conversation starting points (for example, adding links from feedback work items generated for a site, which include details of the feedback and the URL of the page about which it was given). It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims.
 
 ## Deploy the app
 
 ### Deploy from your local machine
 
 #### Local Setup: Basic Chat Experience
-1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [Environment variables](#environment-variables) section.
-    
-    These variables are required:
-    - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
-    - `AZURE_OPENAI_MODEL`
-    - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
-    These variables are optional:
-    - `AZURE_OPENAI_TEMPERATURE`
-    - `AZURE_OPENAI_TOP_P`
-    - `AZURE_OPENAI_MAX_TOKENS`
-    - `AZURE_OPENAI_STOP_SEQUENCE`
-    - `AZURE_OPENAI_SYSTEM_MESSAGE`
+1. Copy `.env.sample` to a new file called `.env` and configure the settings as described in the [environment variables](#environment-variables) section.
 
-    See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
+   These variables are required:
+   - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
+   - `AZURE_OPENAI_MODEL`
+   - `AZURE_OPENAI_KEY` (optional if using Entra ID)
+
+   These variables are optional:
+   - `AZURE_OPENAI_TEMPERATURE`
+   - `AZURE_OPENAI_TOP_P`
+   - `AZURE_OPENAI_MAX_TOKENS`
+   - `AZURE_OPENAI_STOP_SEQUENCE`
+   - `AZURE_OPENAI_SYSTEM_MESSAGE`
+
+   See the [documentation](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/reference#example-response-2) for more information on these parameters.
 
 2. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 
@@ -35,28 +32,14 @@ Note: some portions of the app use preview APIs.
 
 NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
 
-#### Local Setup: Chat with your data using Azure Cognitive Search
-[More information about Azure OpenAI on your data](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/use-your-data)
+#### Local Setup: Bing searching
 
-1. Update the `AZURE_OPENAI_*` environment variables as described above. 
-2. To connect to your data, you need to specify an Azure Cognitive Search index to use. You can [create this index yourself](https://learn.microsoft.com/en-us/azure/search/search-get-started-portal) or use the [Azure AI Studio](https://oai.azure.com/portal/chat) to create the index for you.
-
-    These variables are required when adding your data with Azure AI Search:
-    - `DATASOURCE_TYPE` (should be set to `AzureCognitiveSearch`)
-    - `AZURE_SEARCH_SERVICE`
-    - `AZURE_SEARCH_INDEX`
-    - `AZURE_SEARCH_KEY` (optional if using Entra ID)
-
-    These variables are required for Bing searching to work:
+These variables are required for DeepSearchAI to work:
     - `BING_SEARCH_KEY=<your-bing-search-key>`
     - `BING_SEARCH_ENDPOINT=<your-bing-search-endpoint>`
 
-4. Start the app with `start.cmd`. This will build the frontend, install backend dependencies, and then start the app. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
-5. You can see the local running app at http://127.0.0.1:50505.
-
-NOTE: You may find you need to set: MacOS: `export NODE_OPTIONS="--max-old-space-size=8192"` or Windows: `set NODE_OPTIONS=--max-old-space-size=8192` to avoid running out of memory when building the frontend.
-
 #### Local Setup: Enable Chat History
+
 To enable chat history, you will need to set up CosmosDB resources. The ARM template in the `infrastructure` folder can be used to deploy an app service and a CosmosDB with the database and container configured. You will also need to grant access to your Azure Web App's managed system identity to the Cosmos DB resource with the following command:
 
 ```azurepowershell
@@ -76,13 +59,14 @@ az cosmosdb sql role assignment create --account-name $accountName --resource-gr
 # *** Optional ***
 
 # These next lines will disable key authentication on Cosmos DB (for maximum security).
-# This app uses managed identities with Entra ID to authenticate to Cosmos DB.
+# This app uses managed identities with Entra ID to authenticate to Cosmos DB instead of less secure keys.
 
-# $cosmosdb_id="/subscriptions/<your subscription_id>/resourceGroups/<your resource group name>/providers/Microsoft.DocumentDB/databaseAccounts/<your Cosmos DB name>"
-# az resource update --ids $cosmosdb_id --set properties.disableLocalAuth=true --latest-include-preview
+#$cosmosdb_id="/subscriptions/" + $subscription + "/resourceGroups/" + $resourceGroupName + "/providers/Microsoft.DocumentDB/databaseAccounts/" + $accountName
+#az resource update --ids $cosmosdb_id --set properties.disableLocalAuth=true --latest-include-preview
 ```
 
 Then specify these additional environment variables: 
+
 - `AZURE_COSMOSDB_ACCOUNT`
 - `AZURE_COSMOSDB_DATABASE`
 - `AZURE_COSMOSDB_CONVERSATIONS_CONTAINER`
@@ -90,9 +74,9 @@ Then specify these additional environment variables:
 As above, start the app with `start.cmd`, then visit the local running app at http://127.0.0.1:50505. Or, just run the backend in debug mode using the VSCode debug configuration in `.vscode/launch.json`.
 
 #### Local Setup: Enable Message Feedback
-To enable message feedback, you will need to set up CosmosDB resources. Then specify these additional environment variable:
 
-/.env
+To enable message feedback, you will need to set up CosmosDB resources. Then specify this additional environment variable:
+
 - `AZURE_COSMOSDB_ENABLE_FEEDBACK=True`
 
 ## Environment variables
@@ -113,7 +97,6 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |AZURE_OPENAI_SYSTEM_MESSAGE|You are an AI assistant that helps people find information.|A brief description of the role and tone the model should use|
 |AZURE_OPENAI_PREVIEW_API_VERSION|2024-02-15-preview|API version when using Azure OpenAI on your data|
 |AZURE_OPENAI_STREAM|True|Whether or not to use streaming for the response. Note: Setting this to true prevents the use of prompt flow.|
-|AZURE_OPENAI_EMBEDDING_NAME||The name of your embedding model deployment if using vector search.
 |BING_SEARCH_KEY||The key for your Bing Search resource.|
 |BING_SEARCH_ENDPOINT||The endpoint for your Bing Search resource.|
 |UI_TITLE|DeepSearchAI| Chat title (left-top) and page title (HTML)
