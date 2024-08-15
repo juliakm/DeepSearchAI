@@ -643,6 +643,7 @@ async def search_and_add_background_references(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
+        logging.warning("About to try searching for background references.")
         system_preamble = await search_and_add_background_references(request_body, request_headers)
         
         logging.warning(f"Results of searching: {system_preamble}")
