@@ -645,7 +645,7 @@ async def conversation_internal(request_body, request_headers):
     try:
         system_preamble = await search_and_add_background_references(request_body, request_headers)
         
-        logging.error(f"Results of searching: {system_preamble}")
+        logging.warning(f"Results of searching: {system_preamble}")
         
         if system_preamble != "Search error.":
             result = await stream_chat_request(request_body, request_headers, system_preamble)
