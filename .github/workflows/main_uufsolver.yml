@@ -28,7 +28,10 @@ jobs:
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install --upgrade gunicorn uvicorn
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
@@ -50,7 +53,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # This is required for requesting the JWT
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -60,14 +64,14 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
-
       
-      - name: Login to Azure
+      - name: Login to Azure using Federated Credentials
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6CF65D5557424EFCAE036979C622871E }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E664AD17D132441C89CAE069F810C549 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4C0B1B1DADEB41E59875EAED7E16D1A4 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -75,4 +79,3 @@ jobs:
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
-          

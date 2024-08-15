@@ -29,8 +29,6 @@ jobs:
       
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install --upgrade gunicorn uvicorn
@@ -38,7 +36,7 @@ jobs:
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip * .[^.]* -x "venv/*" ".github/*" ".git/*"
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -81,4 +79,3 @@ jobs:
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
-          package: release.zip
