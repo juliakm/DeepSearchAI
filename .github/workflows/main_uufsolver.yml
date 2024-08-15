@@ -28,17 +28,12 @@ jobs:
           source venv/bin/activate
       
       - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install --upgrade gunicorn uvicorn
+        run: pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip * .[^.]* -x "venv/*" ".github/*" ".git/*"
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -55,8 +50,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -66,14 +60,14 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: unzip release.zip
+
       
-      - name: Login to Azure using Federated Credentials
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          allow-no-subscriptions: true
-          enable-AzPSSession: true
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_41A649B2FEFD495A9F5370E0475CF5B0 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9D333C31417A4A62ABF7D72586C5BE21 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9EAB3B8924CD4FBBA6087100013814C2 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -81,4 +75,4 @@ jobs:
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
-          package: release.zip
+          
