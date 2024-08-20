@@ -2,13 +2,12 @@ import uuid
 from datetime import datetime
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import exceptions
-from azure.identity import DefaultAzureCredential
 
 class CosmosConversationClient():
     
     def __init__(self, cosmosdb_endpoint: str, credential: any, database_name: str, container_name: str, enable_message_feedback: bool = False):
         self.cosmosdb_endpoint = cosmosdb_endpoint
-        self.credential = DefaultAzureCredential()
+        self.credential = credential
         self.database_name = database_name
         self.container_name = container_name
         self.enable_message_feedback = enable_message_feedback
@@ -179,6 +178,6 @@ class CosmosConversationClient():
         messages = []
         async for item in self.container_client.query_items(query=query, parameters=parameters):
             messages.append(item)
-
+        
         return messages
 

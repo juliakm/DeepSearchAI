@@ -448,12 +448,11 @@ class _AppSettings(BaseModel):
                 
             else:
                 self.datasource = None
-                logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
-                
+                logging.warning("No search datasource being used.")
             return self
 
         except ValidationError:
-            logging.warning("No datasource configuration found in the environment -- calls will be made to Azure OpenAI without grounding data.")
+            logging.warning("Validation error setting datasource settings")
 
 
 app_settings = _AppSettings()

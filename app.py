@@ -96,7 +96,6 @@ def create_app():
             clients[page_instance_id] = websocket._get_current_object()
             while True:
                 message = await websocket.receive()  # Receive messages
-                logging.debug(f"Received message: {message} from {page_instance_id}")
         except Exception as e:
             logging.error(f"WebSocket exception: {e}")
         finally:
@@ -224,17 +223,12 @@ def init_cosmosdb_client():
                 f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
             )
 
-            if not app_settings.chat_history.account_key:
-                credential = DefaultAzureCredential()
-            else:
-                credential = app_settings.chat_history.account_key
-
             cosmos_conversation_client = CosmosConversationClient(
                 cosmosdb_endpoint=cosmos_endpoint,
-                credential=credential,
+                credential=DefaultAzureCredential(),
                 database_name=app_settings.chat_history.database,
                 container_name=app_settings.chat_history.conversations_container,
-                enable_message_feedback=app_settings.chat_history.enable_feedback,
+                enable_message_feedback=app_settings.chat_history.enable_feedback
             )
         except Exception as e:
             logging.exception("Exception in CosmosDB initialization", e)
@@ -633,7 +627,7 @@ async def search_and_add_background_references(request_body, request_headers):
                 newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
                 Summaries += newSummaries
             
-            await set_status_message("🤖 Validating sources with Deep§earchAI™...", page_instance_id)
+            await set_status_message("🤖 Validating research sufficiency...", page_instance_id)
             AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
             if AreWeDone:
                 NeedsMoreSummaries = False
@@ -643,11 +637,8 @@ async def search_and_add_background_references(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        logging.warning("About to try searching for background references.")
         system_preamble = await search_and_add_background_references(request_body, request_headers)
-        
-        logging.warning(f"Results of searching: {system_preamble}")
-        
+               
         if system_preamble != "Search error.":
             result = await stream_chat_request(request_body, request_headers, system_preamble)
         else:
@@ -729,8 +720,6 @@ async def add_conversation():
         else:
             raise Exception("No user message found")
 
-        await cosmos_conversation_client.cosmosdb_client.close()
-
         # Submit request to Chat Completions for response
         request_body = await request.get_json()
         history_metadata["conversation_id"] = conversation_id
@@ -740,6 +729,9 @@ async def add_conversation():
     except Exception as e:
         logging.exception("Exception in /history/generate")
         return jsonify({"error": str(e)}), 500
+    
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()
 
 
 @bp.route("/history/update", methods=["POST"])
@@ -784,7 +776,7 @@ async def update_conversation():
             raise Exception("No bot messages found")
 
         # Submit request to Chat Completions for response
-        await cosmos_conversation_client.cosmosdb_client.close()
+        
         response = {"success": True}
         return jsonify(response), 200
 
@@ -792,6 +784,8 @@ async def update_conversation():
         logging.exception("Exception in /history/update")
         return jsonify({"error": str(e)}), 500
 
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()    
 
 @bp.route("/history/message_feedback", methods=["POST"])
 async def update_message():
@@ -837,6 +831,9 @@ async def update_message():
     except Exception as e:
         logging.exception("Exception in /history/message_feedback")
         return jsonify({"error": str(e)}), 500
+    
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()  
 
 
 @bp.route("/history/delete", methods=["DELETE"])
@@ -868,8 +865,6 @@ async def delete_conversation():
             user_id, conversation_id
         )
 
-        await cosmos_conversation_client.cosmosdb_client.close()
-
         return (
             jsonify(
                 {
@@ -882,6 +877,9 @@ async def delete_conversation():
     except Exception as e:
         logging.exception("Exception in /history/delete")
         return jsonify({"error": str(e)}), 500
+    
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()
 
 
 @bp.route("/history/list", methods=["GET"])
@@ -1035,7 +1033,6 @@ async def delete_all_conversations():
             deleted_conversation = await cosmos_conversation_client.delete_conversation(
                 user_id, conversation["id"]
             )
-        await cosmos_conversation_client.cosmosdb_client.close()
         return (
             jsonify(
                 {
@@ -1048,6 +1045,8 @@ async def delete_all_conversations():
     except Exception as e:
         logging.exception("Exception in /history/delete_all")
         return jsonify({"error": str(e)}), 500
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()
 
 
 @bp.route("/history/clear", methods=["POST"])
@@ -1086,6 +1085,8 @@ async def clear_messages():
     except Exception as e:
         logging.exception("Exception in /history/clear_messages")
         return jsonify({"error": str(e)}), 500
+    finally:
+        cosmos_conversation_client.cosmosdb_client.close()
 
 
 @bp.route("/history/ensure", methods=["GET"])
@@ -1101,7 +1102,6 @@ async def ensure_cosmos():
                 return jsonify({"error": err}), 422
             return jsonify({"error": "CosmosDB is not configured or not working"}), 500
 
-        await cosmos_conversation_client.cosmosdb_client.close()
         return jsonify({"message": "CosmosDB is configured and working"}), 200
     except Exception as e:
         logging.exception("Exception in /history/ensure")
@@ -1128,6 +1128,8 @@ async def ensure_cosmos():
             )
         else:
             return jsonify({"error": "CosmosDB is not working"}), 500
+    finally:
+        await cosmos_conversation_client.cosmosdb_client.close()
 
 
 async def generate_title(conversation_messages) -> str:
