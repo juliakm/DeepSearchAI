@@ -2,7 +2,7 @@
 
 This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat.
 
-It will automatically starts a conversation with the any contents given to the URL query string, allowing you to embed links with predefined conversation starting points (for example, adding links from feedback work items generated for a site, which include details of the feedback and the URL of the page about which it was given). It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims.
+It automatically starts a conversation with the any contents given to the URL query string, allowing you to embed links with predefined conversation starting points. It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims.
 
 ## Deploy the app
 
