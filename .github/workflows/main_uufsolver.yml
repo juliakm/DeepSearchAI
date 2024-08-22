@@ -73,9 +73,17 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
-      - name: 'Deploy to Azure Web App'
+      - name: 'Deploy to UUFSolver Azure Web App'
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
+        id: deploy-to-uufsolver-webapp
         with:
           app-name: 'UUFSolver'
           slot-name: 'Production'
+
+      - name: 'Deploy to CSS-Genie Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-css-genie-webapp
+        with:
+          app-name: 'CSS-Genie'
+          slot-name: 'Production'
+          
