@@ -86,4 +86,19 @@ jobs:
         with:
           app-name: 'CSS-Genie'
           slot-name: 'Production'
+
+      - name: Login to BAPI subscription using Federated Credentials
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.BAPI_CLIENT_ID }}
+          tenant-id: ${{ secrets.BAPI_TENANT_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true
+
+      - name: 'Deploy to UUFSolver Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-uuf-solver-webapp
+        with:
+          app-name: 'UUF-Solver'
+          slot-name: 'Production'
           
