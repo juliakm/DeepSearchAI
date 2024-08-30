@@ -73,10 +73,8 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
-      - name: Validate account identity and set subscription for testing
-        run: |
-          az account show
-          az account set --subscription "7c80f223-75b8-44d1-a155-09bd30bd62bd"
+      - name: Get Service Principal Details
+        run: az ad sp show --id ${{ secrets.AZURE_CLIENT_ID }}
 
       - name: 'Deploy to UUFSolver Azure Web App'
         uses: azure/webapps-deploy@v3
