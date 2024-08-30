@@ -74,7 +74,7 @@ jobs:
           enable-AzPSSession: true
 
       - name: Validate account identity and set subscription for testing
-        run: 
+        run: |
           az account show
           az account set --subscription "7c80f223-75b8-44d1-a155-09bd30bd62bd"
 
