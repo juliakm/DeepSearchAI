@@ -82,3 +82,10 @@ jobs:
         with:
           app-name: 'UUF-Solver'
           slot-name: 'Production'
+
+      - name: 'Deploy to CSSGenie Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-uuf-solver-webapp
+        with:
+          app-name: 'CSSGenie'
+          slot-name: 'Production'
