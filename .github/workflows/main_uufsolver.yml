@@ -82,7 +82,7 @@ jobs:
 
       - name: 'Deploy to CSSGenie Azure Web App'
         uses: azure/webapps-deploy@v3
-        id: deploy-to-uuf-solver-webapp
+        id: deploy-to-cssgenie-webapp
         with:
           app-name: 'CSSGenie'
           slot-name: 'Production'
