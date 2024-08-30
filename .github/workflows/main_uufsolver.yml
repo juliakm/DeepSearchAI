@@ -73,9 +73,6 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
-      - name: Get Service Principal Details
-        run: az ad sp show --id ${{ secrets.AZURE_CLIENT_ID }}
-
       - name: 'Deploy to UUFSolver Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-uuf-solver-webapp
