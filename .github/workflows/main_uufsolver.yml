@@ -92,6 +92,7 @@ jobs:
         with:
           client-id: ${{ secrets.BAPI_CLIENT_ID }}
           tenant-id: ${{ secrets.BAPI_TENANT_ID }}
+          subscription-id: ${{ secrets.BAPI_SUBSCRIPTION_ID }}
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
