@@ -87,11 +87,11 @@ jobs:
       #    app-name: 'CSS-Genie'
       #    slot-name: 'Production'
 
-      - name: Login to BAPI subscription using Federated Credentials
+      - name: Login to BAMI subscription using Federated Credentials
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.BAPI_CLIENT_ID }}
-          tenant-id: ${{ secrets.BAPI_TENANT_ID }}
+          client-id: ${{ secrets.BAMI_CLIENT_ID }}
+          tenant-id: ${{ secrets.BAMI_TENANT_ID }}
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
