@@ -187,7 +187,6 @@ def init_openai_client():
         aoai_api_key = app_settings.azure_openai.key
         ad_token_provider = None
         if not aoai_api_key:
-            logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
             ad_token_provider = get_bearer_token_provider(
                 DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
@@ -610,7 +609,8 @@ async def search_and_add_background_references(request_body, request_headers):
 
         while NeedsMoreSummaries:
 
-            searches = await identify_searches(request_body, request_headers)
+            searches = await identify_searches(request_body, request_headers, Summaries)
+
             if searches == None:
                 await set_status_message("🔆 Generating answer...", page_instance_id)
                 return None
@@ -643,6 +643,7 @@ async def conversation_internal(request_body, request_headers):
             result = await stream_chat_request(request_body, request_headers, system_preamble)
         else:
             result = await stream_chat_request(request_body, request_headers, prompts["search_error_preamble"])
+
         response = await make_response(format_as_ndjson(result))
         response.timeout = None
         response.mimetype = "application/json-lines"
