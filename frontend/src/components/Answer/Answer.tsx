@@ -57,7 +57,12 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     if (outputtype == "text") content = document.querySelector(`.${styles.answerContainer}`)?.textContent || "";
     if (outputtype == "html") {
       const element = document.querySelector(`.${styles.answerContainer}`);
+      const copyElement = document.getElementById("copyButtonContainer")
+      if (copyElement) {
+        copyElement.style.display = "none";
+      }
       if (element) {
+        
         const blob = new Blob([element.outerHTML], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
@@ -68,6 +73,9 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           setIconNameHTML('Copy');
           setIconColorHTML(''); // Revert the icon color back
         }, 2000);
+      }
+      if (copyElement) {
+        copyElement.style.display = "block";
       }
     } else {
       navigator.clipboard.writeText(content).then(
@@ -337,7 +345,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             </Stack.Item>
 
             {(isHovered && answer.answer.slice(-3) != "...") && (
-            <Stack.Item className={styles.copyButtonContainer} style={{position:'absolute', bottom: 0, right: 0}}>
+            <Stack.Item className={styles.copyButtonContainer} id='copyButtonContainer' style={{position:'absolute', bottom: 0, right: 0}}>
               <DefaultButton
                 title={"Copy markdown to text"}
                 iconProps={{ iconName: iconNameTXT }}
