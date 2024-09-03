@@ -4,7 +4,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Checkbox, DefaultButton, Dialog, FontIcon, Stack, Text } from '@fluentui/react'
 import { useBoolean } from '@fluentui/react-hooks'
-import { ThumbDislike20Filled, ThumbLike20Filled } from '@fluentui/react-icons'
+import { ThumbDislike20Filled, ThumbLike20Filled, Lightbulb24Regular } from '@fluentui/react-icons'
 import DOMPurify from 'dompurify'
 import remarkGfm from 'remark-gfm'
 import supersub from 'remark-supersub'
@@ -34,6 +34,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
   const [isHovered, setIsHovered] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const hideTimeoutRef = useRef<number | null>(null);
+  const [isHTMLCopyPopupVisible, setIsHTMLCopyPopupVisible] = useState(false);
+
 
   const handleMouseEnter = () => {
     // Clear any existing timeout to prevent premature hiding
@@ -41,7 +43,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       clearTimeout(hideTimeoutRef.current);
     }
     setIsHovered(true);
-  };
+    
+  }
    
   const handleMouseLeave = () => {
     // Set a timeout to hide the buttons after 1 second
@@ -110,11 +113,13 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         navigator.clipboard.write(htmlcontent);
         setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
         setIconColorHTML('green'); // Temporarily change the icon color to green
+        setIsHTMLCopyPopupVisible(true);
         // Revert the icon back to "Copy" after 2 seconds
         setTimeout(() => {
+          setIsHTMLCopyPopupVisible(false);
           setIconNameHTML('Copy');
           setIconColorHTML(''); // Revert the icon color back
-        }, 2000);
+        }, 3500);
       }
       
       if (copyElement) {
@@ -432,6 +437,25 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     icon: { fontSize: '11px', color: iconColorHTML }
                   }}
                 />
+                {/* HTML copy advice popup */}
+                {isHTMLCopyPopupVisible && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '8px', // Adjust to position above the button
+                        left: '8px',
+                        backgroundColor: 'rgba(255, 250, 245, 1)',
+                        color: 'black',
+                        padding: '10px 20px',
+                        borderRadius: '5px',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1000,
+                        whiteSpace: 'nowrap',
+                        fontSize: '12px',
+                    }}>
+                        <b><Lightbulb24Regular style={{ marginRight: '8px', color: 'green' }} />Copied HTML</b><br/>
+                        <b>TIP:</b> For best results in email/Word, paste with <i>Keep source formatting</i>.
+                    </div>
+                )}
                 <div onClick={copyToClipboard.bind(this, "html")} title="Copy html to clipboard" style={{ position: 'absolute', bottom: '21px', right: '-12px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 3, cursor: 'pointer' }}>
                   html
                 </div>
