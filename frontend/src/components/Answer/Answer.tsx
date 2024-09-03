@@ -50,6 +50,31 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     }, 333);
   };
 
+  function convertDivsToTables(htmlContent: string): string {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+
+    doc.querySelectorAll('div').forEach((div) => {
+        const table = document.createElement('table');
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+
+        td.innerHTML = div.innerHTML;
+
+        Array.from(div.attributes).forEach((attr) => {
+            td.setAttribute(attr.name, attr.value);
+        });
+
+        tr.appendChild(td);
+        table.appendChild(tr);
+
+        div.replaceWith(table);
+    });
+
+    return new XMLSerializer().serializeToString(doc);
+  }
+
+
   const copyToClipboard = (outputtype:string = "") => {
     if (outputtype == "") return;
     let content = "";
@@ -65,7 +90,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       }
 
       if (element) {
-        const blob = new Blob([element.outerHTML], { type: 'text/html' });
+        const blob = new Blob([convertDivsToTables(element.outerHTML)], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
         setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
