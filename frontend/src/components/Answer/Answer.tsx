@@ -50,14 +50,29 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     }, 333);
   };
 
-  function convertDivsToTables(htmlContent: string): string {
+  function convertDivsToTables(htmlContent: string, tableWidth: string = '100%'): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
 
     doc.querySelectorAll('div').forEach((div) => {
         const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.maxWidth = tableWidth;
+        table.style.borderCollapse = 'collapse';
+        table.style.borderSpacing = '0';
+        table.style.margin = "0 auto"; // Center the table
         const tr = document.createElement('tr');
         const td = document.createElement('td');
+        td.style.padding = '0';
+
+         // Preserve code section styling (e.g., beveled corners)
+        if (div.classList.contains('code-section')) {
+          td.style.border = '1px solid #ccc';
+          td.style.borderRadius = '8px';  // Adjust for more or less bevel
+          td.style.padding = '10px';      // Add some padding for a nicer look
+          td.style.backgroundColor = '#f9f9f9';  // Optional: background color for code sections
+          td.style.fontFamily = 'monospace'; // Optional: code font styling
+        }
 
         td.innerHTML = div.innerHTML;
 
@@ -90,7 +105,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       }
 
       if (element) {
-        const blob = new Blob([convertDivsToTables(element.outerHTML)], { type: 'text/html' });
+        const blob = new Blob([convertDivsToTables(element.outerHTML, '600px')], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
         setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
