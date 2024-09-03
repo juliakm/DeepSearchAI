@@ -437,29 +437,31 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                     icon: { fontSize: '11px', color: iconColorHTML }
                   }}
                 />
-                {/* HTML copy advice popup */}
-                {isHTMLCopyPopupVisible && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '8px', // Adjust to position above the button
-                        left: '8px',
-                        backgroundColor: 'rgba(255, 250, 245, 1)',
-                        color: 'black',
-                        padding: '10px 20px',
-                        borderRadius: '5px',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1000,
-                        whiteSpace: 'nowrap',
-                        fontSize: '12px',
-                    }}>
-                        <b><Lightbulb24Regular style={{ marginRight: '8px', color: 'green' }} />Copied HTML</b><br/>
-                        <b>TIP:</b> For best results in email/Word, paste with <i>Keep source formatting</i>.
-                    </div>
-                )}
                 <div onClick={copyToClipboard.bind(this, "html")} title="Copy html to clipboard" style={{ position: 'absolute', bottom: '21px', right: '-12px',  userSelect: 'none', fontStyle: 'bold', fontFamily: 'Courier, monospace', fontSize: '9px', zIndex: 3, cursor: 'pointer' }}>
                   html
                 </div>
             </Stack.Item>)}
+            {isHTMLCopyPopupVisible && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '8px', // Adjust to position above the button
+                        left: '620px',
+                        backgroundColor: 'rgba(240, 225, 225, 1)',
+                        color: 'black',
+                        padding: '6px 12px',
+                        borderRadius: '5px',
+                        borderColor: 'rgba(200, 200, 200, .7)',
+                        borderWidth: '1px',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1000,
+                        whiteSpace: 'nowrap',
+                        fontSize: '14px',
+                    }}>
+                        <b><Lightbulb24Regular style={{ marginRight: '8px', color: 'green' }} />Copied HTML</b><br/><br/>
+                        <b>TIP:</b> For best results in email/Word,<br/>paste with <i>Keep source formatting</i>.
+                    </div>
+                )
+            }
             <Stack.Item className={styles.answerHeader}>
               {FEEDBACK_ENABLED && answer.message_id !== undefined && (
                 <Stack horizontal horizontalAlign="space-between">
