@@ -57,12 +57,14 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     if (outputtype == "text") content = document.querySelector(`.${styles.answerContainer}`)?.textContent || "";
     if (outputtype == "html") {
       const element = document.querySelector(`.${styles.answerContainer}`);
+      
       const copyElement = document.getElementById("copyButtonContainer")
+      const referenceNode = copyElement?.nextSibling;
       if (copyElement) {
-        copyElement.style.display = "none";
+        copyElement.remove();
       }
+
       if (element) {
-        
         const blob = new Blob([element.outerHTML], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
@@ -74,9 +76,11 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           setIconColorHTML(''); // Revert the icon color back
         }, 2000);
       }
+      
       if (copyElement) {
-        copyElement.style.display = "block";
+        referenceNode?.parentNode?.insertBefore(copyElement, referenceNode);
       }
+
     } else {
       navigator.clipboard.writeText(content).then(
         () => {
