@@ -68,8 +68,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
         outerTd.style.padding = '0';
         outerTd.style.width = tableWidth; // Ensure Gmail respects width
         outerTd.setAttribute('width', tableWidth);
-
-        // Inner table to contain the content
+        
         const innerTable = document.createElement('table');
         innerTable.style.width = '100%';
         innerTable.style.borderCollapse = 'collapse';
@@ -88,7 +87,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
           innerTd.style.fontFamily = 'monospace';
           innerTd.style.borderRadius = '8px';
         }
-        innerTd.innerHTML = div.innerHTML;
+        innerTd.innerHTML = processContent(div.innerHTML);
 
         innerTr.appendChild(innerTd);
         innerTable.appendChild(innerTr);
@@ -102,6 +101,45 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
 
     return new XMLSerializer().serializeToString(doc);
   }
+
+  function processContent(content: string): string {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+
+    // Handle nested ordered and unordered lists
+    doc.querySelectorAll('ol, ul').forEach((list) => {
+        wrapListInTable(list as HTMLElement); // Cast to HTMLElement
+    });
+
+    return new XMLSerializer().serializeToString(doc.body);
+  }
+
+  function wrapListInTable(list: HTMLElement): void {
+      const table = document.createElement('table');
+      table.role = "presentation";
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+      table.style.marginLeft = '20px'; // Indent nested lists
+
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.style.padding = '0';
+      td.style.fontFamily = 'sans-serif'; // Apply default font unless it's a code section
+
+      // Recursively process nested lists
+      const nestedListItems = list.querySelectorAll('li > ol, li > ul');
+      nestedListItems.forEach((nestedList) => {
+          wrapListInTable(nestedList as HTMLElement); // Cast to HTMLElement
+      });
+
+      td.innerHTML = list.outerHTML;
+      tr.appendChild(td);
+      table.appendChild(tr);
+
+      list.replaceWith(table);
+  }
+
+
 
   const copyToClipboard = (outputtype:string = "") => {
     if (outputtype == "") return;
