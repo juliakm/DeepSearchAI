@@ -12,9 +12,7 @@ import Plot from 'react-plotly.js'
 import { AskResponse, Citation, Feedback, historyMessageFeedback } from '../../api'
 import { XSSAllowTags, XSSAllowAttributes } from '../../constants/sanatizeAllowables'
 import { AppStateContext } from '../../state/AppProvider'
-
 import { parseAnswer } from './AnswerParser'
-
 import styles from './Answer.module.css'
 
 interface Props {
