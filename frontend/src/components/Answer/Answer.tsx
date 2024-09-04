@@ -81,11 +81,13 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
 
         const innerTr = document.createElement('tr');
         const innerTd = document.createElement('td');
-        innerTd.style.padding = '10px';
-        innerTd.style.border = '1px solid #ccc';
-        innerTd.style.backgroundColor = '#f9f9f9';
-        innerTd.style.fontFamily = 'monospace';
-        innerTd.style.borderRadius = '8px';
+        if (div.classList.contains('code-section')) {
+          innerTd.style.padding = '10px';
+          innerTd.style.border = '1px solid #ccc';
+          innerTd.style.backgroundColor = '#f9f9f9';
+          innerTd.style.fontFamily = 'monospace';
+          innerTd.style.borderRadius = '8px';
+        }
         innerTd.innerHTML = div.innerHTML;
 
         innerTr.appendChild(innerTd);
