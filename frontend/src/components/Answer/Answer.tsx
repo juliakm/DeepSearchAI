@@ -58,39 +58,53 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     const doc = parser.parseFromString(htmlContent, 'text/html');
 
     doc.querySelectorAll('div').forEach((div) => {
-        const table = document.createElement('table');
-        table.style.width = '100%';
-        table.style.maxWidth = tableWidth;
-        table.style.borderCollapse = 'collapse';
-        table.style.borderSpacing = '0';
-        table.style.margin = "0 auto"; // Center the table
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.style.padding = '0';
+        const outerTable = document.createElement('table');
+        outerTable.style.width = tableWidth;
+        outerTable.style.maxWidth = tableWidth;
+        outerTable.style.borderCollapse = 'collapse';
+        outerTable.style.borderSpacing = '0';
+        outerTable.style.margin = "0 auto"; // Center the table
+        outerTable.setAttribute('width', tableWidth); // Ensure Gmail respects width
 
-         // Preserve code section styling (e.g., beveled corners)
-        if (div.classList.contains('code-section')) {
-          td.style.border = '1px solid #ccc';
-          td.style.borderRadius = '8px';  // Adjust for more or less bevel
-          td.style.padding = '10px';      // Add some padding for a nicer look
-          td.style.backgroundColor = '#f9f9f9';  // Optional: background color for code sections
-          td.style.fontFamily = 'monospace'; // Optional: code font styling
-        }
+        const outerTr = document.createElement('tr');
+        const outerTd = document.createElement('td');
+        outerTd.style.padding = '0';
+        outerTd.style.width = tableWidth; // Ensure Gmail respects width
+        outerTd.setAttribute('width', tableWidth);
 
-        td.innerHTML = div.innerHTML;
+        // Inner table to contain the content
+        const innerTable = document.createElement('table');
+        innerTable.style.width = '100%';
+        innerTable.style.borderCollapse = 'collapse';
+        innerTable.style.wordWrap = 'break-word';
+        innerTable.style.wordBreak = 'break-word'; // Ensure words break
+        innerTable.style.whiteSpace = 'normal'; // Wrap text normally
+        innerTable.style.tableLayout = 'fixed'; // Forces the table to respect widths
+        innerTable.setAttribute('width', '100%');
 
-        Array.from(div.attributes).forEach((attr) => {
-            td.setAttribute(attr.name, attr.value);
-        });
+        const innerTr = document.createElement('tr');
+        const innerTd = document.createElement('td');
+        innerTd.style.padding = '10px';
+        innerTd.style.border = '1px solid #ccc';
+        innerTd.style.backgroundColor = '#f9f9f9';
+        innerTd.style.fontFamily = 'monospace';
+        innerTd.style.borderRadius = '8px';
+        innerTd.innerHTML = div.innerHTML;
 
-        tr.appendChild(td);
-        table.appendChild(tr);
+        innerTr.appendChild(innerTd);
+        innerTable.appendChild(innerTr);
 
-        div.replaceWith(table);
+        outerTd.appendChild(innerTable);
+        outerTr.appendChild(outerTd);
+        outerTable.appendChild(outerTr);
+
+        div.replaceWith(outerTable);
     });
 
     return new XMLSerializer().serializeToString(doc);
   }
+
+
 
 
   const copyToClipboard = (outputtype:string = "") => {
@@ -108,7 +122,7 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
       }
 
       if (element) {
-        const blob = new Blob([convertDivsToTables(element.outerHTML, '600px')], { type: 'text/html' });
+        const blob = new Blob([convertDivsToTables(element.outerHTML, '750px')], { type: 'text/html' });
         const htmlcontent = [new ClipboardItem({ 'text/html': blob })];
         navigator.clipboard.write(htmlcontent);
         setIconNameHTML('CheckMark'); // Temporarily change the icon to "CheckMark"
@@ -444,8 +458,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
             {isHTMLCopyPopupVisible && (
                     <div style={{
                         position: 'absolute',
-                        bottom: '8px', // Adjust to position above the button
-                        left: '620px',
+                        bottom: '40px', // Adjust to position above the button
+                        right: '-205px',
                         backgroundColor: 'rgba(240, 225, 225, 1)',
                         color: 'black',
                         padding: '6px 12px',
@@ -457,8 +471,8 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
                         whiteSpace: 'nowrap',
                         fontSize: '14px',
                     }}>
-                        <b><Lightbulb24Regular style={{ marginRight: '8px', color: 'green' }} />Copied HTML</b><br/><br/>
-                        <b>TIP:</b> For best results in email/Word,<br/>paste with <i>Keep source formatting</i>.
+                        <b><Lightbulb24Regular style={{ marginRight: '8px', verticalAlign: 'middle', color: 'green' }} />Tip on copied HTML</b><br/>
+                        Paste with <i>Keep source formatting</i> for best results in Office apps.
                     </div>
                 )
             }
