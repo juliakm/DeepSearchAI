@@ -104,9 +104,6 @@ export const Answer = ({ answer, onCitationClicked, onExectResultClicked }: Prop
     return new XMLSerializer().serializeToString(doc);
   }
 
-
-
-
   const copyToClipboard = (outputtype:string = "") => {
     if (outputtype == "") return;
     let content = "";
