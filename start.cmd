@@ -16,26 +16,25 @@ if "%errorlevel%" neq "0" (
 )
 
 echo.
-echo Restoring backend python packages
+echo Restoring backend python packages if necessary
 echo.
-call python -m pip install -r requirements.txt
+call python -m pip install --no-cache-dir -r requirements.txt
 if "%errorlevel%" neq "0" (
     echo Failed to restore backend python packages
     exit /B %errorlevel%
 )
 
 echo.
-echo Restoring frontend npm packages
+echo Checking frontend npm packages if necessary
 echo.
 cd frontend
-call npm install
-if "%errorlevel%" neq "0" (
-    echo Failed to restore frontend npm packages
-    exit /B %errorlevel%
+if not exist "node_modules" (
+    echo node_modules not found. Installing npm packages...
+    call npm install
 )
 
 echo.
-echo Building and starting frontend
+echo Starting frontend in development mode
 echo.
 call npm run build
 if "%errorlevel%" neq "0" (
@@ -50,9 +49,7 @@ cd ..
 
 start http://127.0.0.1:50505
 call python -m uvicorn app:app  --port 50505 --reload
-REM call python3 -m gunicorn  --workers 1 --threads 16 app:app -- port 50505 --reload
 if "%errorlevel%" neq "0" (    
     echo Failed to start backend    
     exit /B %errorlevel%    
-) 
-
+)

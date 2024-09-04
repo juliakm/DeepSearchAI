@@ -1,12 +1,13 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   build: {
     outDir: '../static',
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: mode === 'development' ? 'inline' : true, // Lighter source maps for development
+    minify: mode === 'production', // Only minify in production builds
     rollupOptions: {
       output: {
         manualChunks: {
@@ -26,4 +27,4 @@ export default defineConfig({
       '/chat': 'http://localhost:5000'
     }
   }
-});
+}));

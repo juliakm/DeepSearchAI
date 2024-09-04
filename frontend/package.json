@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "tsc": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc",
+    "tsc": "cross-env NODE_OPTIONS=--max_old_space_size=16384 tsc --incremental --isolatedModules",
     "vite:build": "cross-env NODE_OPTIONS=--max_old_space_size=16384 vite build",
     "build": "npm run tsc && npm run vite:build",
     "test": "jest",
@@ -49,6 +49,7 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^3.1.0",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
