@@ -16,7 +16,6 @@ import { AppStateContext } from '../../state/AppProvider'
 import { parseAnswer } from './AnswerParser'
 
 import styles from './Answer.module.css'
-import { set } from 'lodash'
 
 interface Props {
   answer: AskResponse
