@@ -1,45 +1,26 @@
-import asyncio
-import copy
-import json
+from deepsearchai import search_and_add_background_references, clients
+from chat import stream_chat_request, send_chat_request, init_openai_client
 import os
 import logging
 import uuid
-import httpx
-from datetime import datetime, timezone
 from prompts import prompts
 from quart import (
     Blueprint,
     Quart,
     websocket,
-    session,
     jsonify,
     make_response,
     request,
     send_from_directory,
     render_template,
 )
-from bs4 import BeautifulSoup
-from pprint import pprint
-import requests
-from openai.types.chat import chat_completion
-from openai import AsyncAzureOpenAI
-from azure.identity.aio import (
-    DefaultAzureCredential,
-    get_bearer_token_provider
-)
+from azure.identity.aio import DefaultAzureCredential
 from backend.auth.auth_utils import get_authenticated_user_details
-from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
-from backend.settings import (
-    app_settings,
-    MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-)
+from backend.settings import app_settings
 from backend.utils import (
     format_as_ndjson,
-    format_stream_response,
-    format_non_streaming_response,
-    convert_to_pf_format,
-    format_pf_non_streaming_response,
+    format_non_streaming_response
 )
 
 # Debug settings
@@ -56,21 +37,6 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 logging.getLogger('root').setLevel(logging.WARNING)
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
-
-# Status handling
-status_message = {}
-clients = {}
-
-async def set_status_message(message, page_instance_id):
-    if page_instance_id in clients:
-        websocket_client = clients[page_instance_id]
-        try:
-            await websocket_client.send(message)
-        except Exception as e:
-            logging.error(f"Failed to send message to {page_instance_id}: {e}")
-    else:
-        logging.warn(f"Page instance ID {page_instance_id} not found in clients. Available clients: {clients}")
-
 
 def create_app():
     app = Quart(__name__)
@@ -129,8 +95,6 @@ async def mslearnguy():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-USER_AGENT = "UUFSolver/Async/1.0.0"
-
 # Frontend Settings via Environment Variables
 frontend_settings = {
     "auth_enabled": app_settings.base_settings.auth_enabled,
@@ -149,70 +113,6 @@ frontend_settings = {
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
 }
-
-
-# Enable Microsoft Defender for Cloud Integration
-MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "true"
-
-
-# Initialize Azure OpenAI Client
-def init_openai_client():
-    azure_openai_client = None
-    try:
-        # API version check
-        if (
-            app_settings.azure_openai.preview_api_version
-            < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-        ):
-            raise ValueError(
-                f"The minimum supported Azure OpenAI preview API version is '{MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION}'"
-            )
-
-        # Endpoint
-        if (
-            not app_settings.azure_openai.endpoint and
-            not app_settings.azure_openai.resource
-        ):
-            raise ValueError(
-                "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
-            )
-
-        endpoint = (
-            app_settings.azure_openai.endpoint
-            if app_settings.azure_openai.endpoint
-            else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
-        )
-
-        # Authentication
-        aoai_api_key = app_settings.azure_openai.key
-        ad_token_provider = None
-        if not aoai_api_key:
-            ad_token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-            )
-
-        # Deployment
-        deployment = app_settings.azure_openai.model
-        if not deployment:
-            raise ValueError("AZURE_OPENAI_MODEL is required")
-
-        # Default Headers
-        default_headers = {"x-ms-useragent": USER_AGENT}
-
-        azure_openai_client = AsyncAzureOpenAI(
-            api_version=app_settings.azure_openai.preview_api_version,
-            api_key=aoai_api_key,
-            azure_ad_token_provider=ad_token_provider,
-            default_headers=default_headers,
-            azure_endpoint=endpoint,
-        )
-
-        return azure_openai_client
-    except Exception as e:
-        logging.exception("Exception in Azure OpenAI initialization", e)
-        azure_openai_client = None
-        raise e
-
 
 def init_cosmosdb_client():
     cosmos_conversation_client = None
@@ -238,402 +138,10 @@ def init_cosmosdb_client():
 
     return cosmos_conversation_client
 
-
-def prepare_model_args(request_body, request_headers, system_preamble = None, system_prompt = None):
-    request_messages = request_body.get("messages", [])
-    messages = []
-    system_message = system_prompt if system_prompt is not None else (system_preamble + "\n\n" if system_preamble is not None else "") + app_settings.azure_openai.system_message
-
-    if not app_settings.datasource or system_preamble is not None or system_prompt is not None:
-        messages = [
-            {
-                "role": "system",
-                "content": system_message
-            }
-        ]
-
-    for message in request_messages:
-        if message:
-            messages.append(
-                {
-                    "role": message["role"],
-                    "content": message["content"]
-                }
-            )
-
-    user_json = None
-    if (MS_DEFENDER_ENABLED):
-        authenticated_user_details = get_authenticated_user_details(request_headers)
-        conversation_id = request_body.get("conversation_id", None)      
-        user_json = get_msdefender_user_json(authenticated_user_details, request_headers, conversation_id)
-
-    model_args = {
-        "messages": messages,
-        "temperature": app_settings.azure_openai.temperature,
-        "max_tokens": app_settings.azure_openai.max_tokens,
-        "top_p": app_settings.azure_openai.top_p,
-        "stop": app_settings.azure_openai.stop_sequence,
-        "stream": app_settings.azure_openai.stream,
-        "model": app_settings.azure_openai.model,
-        "user": user_json
-    }
-
-    if app_settings.datasource:
-        model_args["extra_body"] = {
-            "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
-                    request=request
-                )
-            ]
-        }
-
-    model_args_clean = copy.deepcopy(model_args)
-    if model_args_clean.get("extra_body"):
-        secret_params = [
-            "key",
-            "connection_string",
-            "embedding_key",
-            "encoded_api_key",
-            "api_key",
-        ]
-        for secret_param in secret_params:
-            if model_args_clean["extra_body"]["data_sources"][0]["parameters"].get(
-                secret_param
-            ):
-                model_args_clean["extra_body"]["data_sources"][0]["parameters"][
-                    secret_param
-                ] = "*****"
-        authentication = model_args_clean["extra_body"]["data_sources"][0][
-            "parameters"
-        ].get("authentication", {})
-        for field in authentication:
-            if field in secret_params:
-                model_args_clean["extra_body"]["data_sources"][0]["parameters"][
-                    "authentication"
-                ][field] = "*****"
-        embeddingDependency = model_args_clean["extra_body"]["data_sources"][0][
-            "parameters"
-        ].get("embedding_dependency", {})
-        if "authentication" in embeddingDependency:
-            for field in embeddingDependency["authentication"]:
-                if field in secret_params:
-                    model_args_clean["extra_body"]["data_sources"][0]["parameters"][
-                        "embedding_dependency"
-                    ]["authentication"][field] = "*****"
-
-    return model_args
-
-
-async def promptflow_request(request):
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {app_settings.promptflow.api_key}",
-        }
-        # Adding timeout for scenarios where response takes longer to come back
-        logging.debug(f"Setting timeout to {app_settings.promptflow.response_timeout}")
-        async with httpx.AsyncClient(
-            timeout=float(app_settings.promptflow.response_timeout)
-        ) as client:
-            pf_formatted_obj = convert_to_pf_format(
-                request,
-                app_settings.promptflow.request_field_name,
-                app_settings.promptflow.response_field_name
-            )
-            # NOTE: This only support question and chat_history parameters
-            # If you need to add more parameters, you need to modify the request body
-            response = await client.post(
-                app_settings.promptflow.endpoint,
-                json={
-                    app_settings.promptflow.request_field_name: pf_formatted_obj[-1]["inputs"][app_settings.promptflow.request_field_name],
-                    "chat_history": pf_formatted_obj[:-1],
-                },
-                headers=headers,
-            )
-        resp = response.json()
-        resp["id"] = request["messages"][-1]["id"]
-        return resp
-    except Exception as e:
-        logging.error(f"An error occurred while making promptflow_request: {e}")
-
-
-async def send_chat_request(request_body, request_headers, system_preamble = None, system_prompt = None):
-    filtered_messages = []
-    messages = request_body.get("messages", [])
-    for message in messages:
-        if message.get("role") != 'tool':
-            filtered_messages.append(message)
-            
-    request_body['messages'] = filtered_messages
-    model_args = prepare_model_args(request_body, request_headers, system_preamble, system_prompt)
-
-    try:
-        azure_openai_client = init_openai_client()
-        raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
-        response = raw_response.parse()
-        
-        apim_request_id = raw_response.headers.get("apim-request-id") 
-    except Exception as e:
-        logging.exception("Exception in send_chat_request")
-        raise e
-
-    return response, apim_request_id
-
-
 async def complete_chat_request(request_body, request_headers):
-    if app_settings.base_settings.use_promptflow:
-        response = await promptflow_request(request_body)
-        history_metadata = request_body.get("history_metadata", {})
-        return format_pf_non_streaming_response(
-            response,
-            history_metadata,
-            app_settings.promptflow.response_field_name,
-            app_settings.promptflow.citations_field_name
-        )
-    else:
-        response, apim_request_id = await send_chat_request(request_body, request_headers)
-        history_metadata = request_body.get("history_metadata", {})
-        return format_non_streaming_response(response, history_metadata, apim_request_id)
-
-
-async def stream_chat_request(request_body, request_headers, system_preamble = None, system_message = None):
-    response, apim_request_id = await send_chat_request(request_body, request_headers, system_preamble, system_message)
+    response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
-    
-    async def generate():
-        async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata, apim_request_id)
-
-    return generate()
-
-def process_raw_response(raw_content):
-    # Decode the raw content
-    decoded_content = raw_content.decode('utf-8')
-    lines = decoded_content.split('\n')
-    json_response = [json.loads(line) for line in lines if line.strip()]
-    
-    # Initialize variables to hold properties and message contents
-    combined_content = ""
-    final_json = {
-        "messages": [],
-        "model": None,
-        "history_metadata": None,
-    }
-    
-    chat_id = ""
-    for obj in json_response:
-        try:                    
-            # Extract and set top-level properties once
-            if final_json["model"] == None:
-                final_json["model"] = obj.get("model")
-                final_json["history_metadata"] = obj.get("history_metadata")
-                chat_id = obj.get("id")
-            
-            # Extract message contents
-            choices = obj.get("choices", [])
-            for choice in choices:
-                messages = choice.get("messages", [])
-                for message in messages:
-                    content = message.get("content", "")
-                    combined_content += content
-        
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON decode error: {e}")
-            continue
-        except Exception as e:
-            logging.error(f"Error processing object: {e}")
-            continue
-        
-    # Add combined content to the final JSON structure
-    final_json["messages"].append({
-        "id": chat_id,
-        "role": "assistant",
-        "content": combined_content,
-        "date": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-    })
-    
-    return final_json
-
-def concatenate_json_arrays(json_array1, json_array2):
-    json_array1 = json_array1.rstrip(']\n\r ')
-    json_array2 = json_array2.lstrip('[\n\r ')
-    concatenated_json = f"{json_array1}, {json_array2}"
-    return concatenated_json
-
-async def search_bing(search):
-        # Add your Bing Search V7 subscription key and endpoint to your environment variables.
-        subscription_key = app_settings.bing.key
-        endpoint = app_settings.bing.endpoint + "/v7.0/search"
-        mkt = "en-US"
-        params = { 'q' : search, 'mkt' : mkt }
-        headers = { 'Ocp-Apim-Subscription-Key' : subscription_key }
-        ## Call the API
-        try:
-            response = requests.get(endpoint, headers=headers, params=params)
-            response.raise_for_status()
-            search_results = response.json().get("webPages", {}).get("value", [])
-            return search_results
-        except Exception as e:
-            logging.error(f"Error: {e}")
-            return None
-        
-async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
-        bg_request_body = copy.deepcopy(request_body)
-        bg_request_headers = copy.deepcopy(request_headers)
-        bg_request_body["history_metadata"] = None
-        bg_request_body["conversation_id"] = str(uuid.uuid4())
-        bg_request_body["messages"] = bg_request_body["messages"][-1:]
-        result = await stream_chat_request(bg_request_body, bg_request_headers, system_preamble, system_message)
-        response = await make_response(format_as_ndjson(result))
-        response.timeout = None
-        response.mimetype = "application/json-lines"
-        response_raw = await response.get_data()
-        combined_json = process_raw_response(response_raw) 
-        return combined_json["messages"][0]["content"]
-
-async def get_search_results(searches):
-        allresults = None
-        for search in searches:
-            results = await search_bing(search);
-            if results == None:
-                return "Search error."
-            else:
-                if allresults == None:
-                    allresults = results
-                else:
-                    allresults += results
-        # Remove extraneous fields
-                proparray = ["dateLastCrawled", "language", "richFacts", "isNavigational", "isFamilyFriendly", "displayUrl", "searchTags", "noCache", "cachedPageUrl", "datePublishedDisplayText", "datePublished", "id", "primaryImageOfPage", "thumbnailUrl"]
-                for obj in allresults:
-                    for prop in proparray:
-                        if prop in obj:
-                            del obj[prop]
-                return allresults
-
-async def identify_searches(request_body, request_headers, Summaries = None):
-        
-        if Summaries is None:
-            system_preamble = prompts["identify_searches"];
-        else:
-            system_preamble = prompts["identify_additional_searches"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n"
-        
-        searches = await send_private_chat(request_body, request_headers, system_preamble)
-
-        if isinstance(searches, str):
-            if searches == "No searches required.": 
-                return None
-            else:
-                if searches[0] != "[":
-                    searches = "[" + searches
-                if searches[-1] != "]":
-                    searches = searches + "]"
-                searches = json.loads(searches)
-        return searches
-
-async def get_urls_to_browse(request_body, request_headers, searches):
-        searchresults = await get_search_results(searches)
-        if searchresults == "Search error.":
-            return "Search error."
-        else:
-            strsearchresults = json.dumps(searchresults, indent=4)
-            system_preamble = prompts["get_urls_to_browse"] + strsearchresults + "\n\nOriginal System Prompt:\n"
-                        
-            URLsToBrowse = await send_private_chat(request_body, request_headers, None, system_preamble)
-            return URLsToBrowse
-
-async def fetch_and_parse_url(url):
-    response = requests.get(url)
-    if response.status_code == 200:  # Raise an error for bad status codes
-        # Parse the web page
-        soup = BeautifulSoup(response.content, 'html.parser')
-        # Extract the main content
-        paragraphs = soup.find_all('p')
-        # Combine the text from the paragraphs
-        content = ' '.join(paragraph.get_text() for paragraph in paragraphs)
-        return content
-    else:
-        return None
-
-async def get_article_summaries(request_body, request_headers, URLsToBrowse):
-        Summaries = None
-        URLsToBrowse = json.loads(URLsToBrowse)
-        Pages = None
-        
-        async def process_url(URL):
-            page_content = await fetch_and_parse_url(URL)
-            if page_content is not None: 
-                system_prompt = (
-                    "The Original System Prompt that follows is your primary objective, "
-                    "but for this chat you identified the following URL for further research "
-                    "to give your answer: " + URL + 
-                    ". Your task now is to provide a summary of relevant content on the page "
-                    "that will help us address the feedback on the URL provided by the user "
-                    "and document current sources. Return nothing except your summary of the "
-                    "key points and any important quotes the content on the page in a single string.\n\n"
-                    "Page Content:\n\n" + page_content + "\n\nOriginal System Prompt:\n\n"
-                )
-                summary = await send_private_chat(request_body, request_headers, None, system_prompt)
-                summary = json.loads("{\"URL\" : \"" + URL + "\",\n\"summary\" : " + json.dumps(summary) + "}")
-                return summary
-            return None
-
-        # Create tasks for all URLs
-        tasks = [process_url(URL) for URL in URLsToBrowse]
-        
-        # Run tasks concurrently
-        results = await asyncio.gather(*tasks)
-        
-        # Filter out None results and collect summaries
-        Summaries = [summary for summary in results if summary is not None]
-        return Summaries
-
-async def is_background_info_sufficient(request_body, request_headers, Summaries):
-        strSummaries = json.dumps(Summaries, indent=4)
-        system_preamble = prompts["is_background_info_sufficient"] + strSummaries + "\n\nOriginal System Prompt:\n"
-
-        response = await send_private_chat(request_body, request_headers, system_preamble)
-        if response == "More information needed.": 
-            
-            #debug
-            logging.warning("\n\nMore information was needed, searching again.\n\n")
-
-            return False
-        else:
-            return True
-        
-async def search_and_add_background_references(request_body, request_headers):
-        NeedsMoreSummaries = True
-        Summaries = None
-
-        page_instance_id = request_body["page_instance_id"]
-
-        while NeedsMoreSummaries:
-
-            searches = await identify_searches(request_body, request_headers, Summaries)
-
-            if searches == None:
-                await set_status_message("🔆 Generating answer...", page_instance_id)
-                return None
-            
-            await set_status_message("🔍 Searching...", page_instance_id)
-            URLsToBrowse = await get_urls_to_browse(request_body, request_headers, searches)
-            if URLsToBrowse == "Search error.": 
-                return "Search error."       
-
-            await set_status_message("🕵️‍♂️ Browsing and analyzing...", page_instance_id)
-            if (Summaries is None):
-                Summaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
-            else:
-                newSummaries = await get_article_summaries(request_body, request_headers, URLsToBrowse)
-                Summaries += newSummaries
-            
-            await set_status_message("🤖 Checking research validity...", page_instance_id)
-            AreWeDone = await is_background_info_sufficient(request_body, request_headers, Summaries)
-            if AreWeDone:
-                NeedsMoreSummaries = False
-
-        await set_status_message("🌟 Generating answer...", page_instance_id)
-        return prompts["background_info_preamble"] + json.dumps(Summaries, indent=4) + "\n\nOriginal System Prompt:\n\n"
+    return format_non_streaming_response(response, history_metadata, apim_request_id)
 
 async def conversation_internal(request_body, request_headers):
     try:
