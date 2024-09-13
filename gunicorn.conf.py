@@ -6,8 +6,11 @@ log_file = "-"
 bind = "0.0.0.0"
 
 timeout = 230
-# https://learn.microsoft.com/en-us/troubleshoot/azure/app-service/web-apps-performance-faqs#why-does-my-request-time-out-after-230-seconds
 
 num_cpus = multiprocessing.cpu_count()
-workers = (num_cpus * 2) + 1
+workers = 1  # Keeping single worker due to session issues
+
+# Setting threads to use the maximum based on CPU count, but can adjust this multiplier
+threads = num_cpus * 2 
+
 worker_class = "uvicorn.workers.UvicornWorker"
