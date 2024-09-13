@@ -1,6 +1,6 @@
 # [Preview] DeepSearchAI
 
-This app is built on the [Sample Chat App with AOAI GitHub project](https://github.com/microsoft/sample-app-aoai-chatGPT) from which it was originally forked. It modifies Answer.tsx, Chat.tsx, and app.py to add URL parsing and enable back end searches for the chat. It also adds prompts.py, containing the prompts used on its internal conversation during the key "deep search" implementation.
+This app is built on the [Sample Chat App with AOAI GitHub project](https://github.com/microsoft/sample-app-aoai-chatGPT) from which it was originally forked. It modifies Answer.tsx, Chat.tsx, and app.py to add URL parsing and enable back end searches for the chat. The "deep search" implementation is in deepsearchai.py. prompts.py contains the prompts used on its internal conversation during the key "deep search" implementation. And chat.py is where the Azure OpenAI API calls are made now, broken out of app.py since it is used there as well as in the deepsearchai implementation.
 
 It automatically starts a conversation with the any contents given to the URL query string, allowing you to embed links with predefined conversation starting points. It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims.
 
