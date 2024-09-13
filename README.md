@@ -159,7 +159,3 @@ Live URL
 https://uuf-solver.azurewebsites.net/?Article=https://learn.microsoft.com/en-us/azure/data-factory/connector-sap-change-data-capture&Customer%20Feedback=Not%20alot%20of%20information%20regarding%20the%20override%20of%20checkpoint%20key.%20Little%20more%20information%20about%20the%20actual%20implementation%20of%20a%20parameterized%20checkpoint%20key%20for%20the%20different%20sources%20would%20be%20nice
 ```
 
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
-
