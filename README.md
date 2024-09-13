@@ -109,6 +109,55 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_SHOW_CHAT_HISTORY_BUTTON|True|Show chat history button (right-top)
 |SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 
+## Run development container
+
+### Prerequisites
+
+- Docker installed on the host computer
+- Visual Studio Code
+- VSCode extension: Dev Containers 
+- Update `.env` based on setting from dev team
+
+### Run the sample 
+
+1. Remove the venv folder, you don't need this in the dev container. The dev container and venv serve the same purpose of isolating the environment. 
+1. At the root, run the following command to install dependencies:
+
+    ```shell
+    pip install -r requirements.txt
+    pip install --upgrade gunicorn uvicorn
+    cd frontend && npm install && cd ..
+    ```
+
+1. Run the sample wih the following command:
+
+    ```
+    python -m uvicorn app:app  --port 50505 --reload
+    ```
+
+## Use UUF solver
+
+Use the following prompt in the chat window to test UUF solver:
+
+```
+Article: https://learn.microsoft.com/en-us/azure/data-factory/connector-sap-change-data-capture
+Customer Feedback: Not alot of information regarding the override of checkpoint key. Little more information about the actual implementation of a parameterized checkpoint key for the different sources would be nice
+```
+
+Use the following URL in the browser address bar to test the UUF solver:
+
+Dev URL
+
+```
+http://127.0.0.1:50505/?Article=https://learn.microsoft.com/en-us/azure/data-factory/connector-sap-change-data-capture&Customer%20Feedback=Not%20alot%20of%20information%20regarding%20the%20override%20of%20checkpoint%20key.%20Little%20more%20information%20about%20the%20actual%20implementation%20of%20a%20parameterized%20checkpoint%20key%20for%20the%20different%20sources%20would%20be%20nice
+```
+
+Live URL
+
+```
+https://uuf-solver.azurewebsites.net/?Article=https://learn.microsoft.com/en-us/azure/data-factory/connector-sap-change-data-capture&Customer%20Feedback=Not%20alot%20of%20information%20regarding%20the%20override%20of%20checkpoint%20key.%20Little%20more%20information%20about%20the%20actual%20implementation%20of%20a%20parameterized%20checkpoint%20key%20for%20the%20different%20sources%20would%20be%20nice
+```
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
