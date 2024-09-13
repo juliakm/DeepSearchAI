@@ -1,6 +1,6 @@
 # [Preview] DeepSearchAI
 
-This app is built on the Sample Chat App with AOAI GitHub project from which it was originally forked. It primarily modifies Chat.tsx and app.py to add URL parsing and enable back end searches for the chat.
+This app is built on the [Sample Chat App with AOAI GitHub project](https://github.com/microsoft/sample-app-aoai-chatGPT) from which it was originally forked. It modifies Answer.tsx, Chat.tsx, and app.py to add URL parsing and enable back end searches for the chat. It also adds prompts.py, containing the prompts used on its internal conversation during the key "deep search" implementation.
 
 It automatically starts a conversation with the any contents given to the URL query string, allowing you to embed links with predefined conversation starting points. It then gives its best suggestion to answer the system prompt using that information, searching thoroughly and only responding when it can document everything it says with reference links to live URLs for the user to validate ground truth on its claims.
 
@@ -108,7 +108,3 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_SHOW_SHARE_BUTTON|True|Share button (right-top)
 |UI_SHOW_CHAT_HISTORY_BUTTON|True|Show chat history button (right-top)
 |SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
-
-## Trademarks
-
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
