@@ -99,7 +99,6 @@ async def search_bing(search):
             return None
         
 async def send_private_chat(request_body, request_headers, system_preamble = None, system_message = None):
-        from chat import stream_chat_request
         bg_request_body = copy.deepcopy(request_body)
         bg_request_headers = copy.deepcopy(request_headers)
         bg_request_body["history_metadata"] = None
