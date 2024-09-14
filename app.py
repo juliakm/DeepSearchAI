@@ -14,9 +14,8 @@ from quart import (
     send_from_directory,
     render_template,
 )
-from azure.identity.aio import DefaultAzureCredential
 from backend.auth.auth_utils import get_authenticated_user_details
-from backend.history.cosmosdbservice import CosmosConversationClient
+from backend.history.cosmosdbservice import init_cosmosdb_client
 from backend.settings import app_settings
 from backend.utils import (
     format_as_ndjson,
@@ -113,30 +112,6 @@ frontend_settings = {
     },
     "sanitize_answer": app_settings.base_settings.sanitize_answer,
 }
-
-def init_cosmosdb_client():
-    cosmos_conversation_client = None
-    if app_settings.chat_history:
-        try:
-            cosmos_endpoint = (
-                f"https://{app_settings.chat_history.account}.documents.azure.com:443/"
-            )
-
-            cosmos_conversation_client = CosmosConversationClient(
-                cosmosdb_endpoint=cosmos_endpoint,
-                credential=DefaultAzureCredential(),
-                database_name=app_settings.chat_history.database,
-                container_name=app_settings.chat_history.conversations_container,
-                enable_message_feedback=app_settings.chat_history.enable_feedback
-            )
-        except Exception as e:
-            logging.exception("Exception in CosmosDB initialization", e)
-            cosmos_conversation_client = None
-            raise e
-    else:
-        logging.debug("CosmosDB not configured")
-
-    return cosmos_conversation_client
 
 async def complete_chat_request(request_body, request_headers):
     response, apim_request_id = await send_chat_request(request_body, request_headers)
