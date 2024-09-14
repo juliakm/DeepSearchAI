@@ -1,9 +1,9 @@
-from deepsearchai import search_and_add_background_references, clients
-from chat import stream_chat_request, send_chat_request, init_openai_client
+from backend.deepsearchai.deepsearchai import search_and_add_background_references, clients
+from backend.chat import stream_chat_request, send_chat_request, init_openai_client
 import os
 import logging
 import uuid
-from prompts import prompts
+from backend.deepsearchai.prompts import prompts
 from quart import (
     Blueprint,
     Quart,
