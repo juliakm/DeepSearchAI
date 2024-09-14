@@ -28,3 +28,15 @@ export const HistoryButton: React.FC<ButtonProps> = ({ onClick, text }) => {
     />
   )
 }
+
+/* Default Fluent 8 UI icons can only be used as iconProps */
+export const MoreInfoButton: React.FC<ButtonProps> = ({ onClick, text }) => {
+  return (
+    <DefaultButton 
+      className={styles.moreInfoButtonRoot} 
+      text={text} 
+      iconProps={{ iconName: 'Info' }}
+      onClick={onClick}
+     />
+  )
+}
