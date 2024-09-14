@@ -4,14 +4,14 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone
-from prompts import prompts
+from backend.deepsearchai.prompts import prompts
 from quart import make_response
 from bs4 import BeautifulSoup
 from pprint import pprint
 import requests
 from backend.settings import app_settings
 from backend.utils import format_as_ndjson
-from chat import stream_chat_request
+from backend.chat import stream_chat_request
 
 # Status handling
 status_message = {}
