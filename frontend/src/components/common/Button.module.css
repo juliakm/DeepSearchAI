@@ -35,6 +35,11 @@
   border: 1px solid #d1d1d1;
 }
 
+.moreInfoButtonRoot {
+  width: 110px;
+  border: 1px solid #d1d1d1;
+}
+
 @media (max-width: 480px) {
   .shareButtonRoot {
     width: auto;
