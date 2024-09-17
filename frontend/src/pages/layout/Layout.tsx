@@ -20,7 +20,6 @@ const Layout = () => {
   const [logo, setLogo] = useState('')
   const appStateContext = useContext(AppStateContext)
   const ui = appStateContext?.state.frontendSettings?.ui
-  const moreInfoUrl = "https://dev.azure.com/UUFSolver/UUFSolver/_dashboards/dashboard/2a606a02-579c-43dc-9880-dcf52cb1e832";
 
   const handleShareClick = () => {
     setIsSharePanelOpen(true)
@@ -91,7 +90,7 @@ const Layout = () => {
                 text={appStateContext?.state?.isChatHistoryOpen ? hideHistoryLabel : showHistoryLabel}
               />
             )}
-            <MoreInfoButton onClick={() => window.open(moreInfoUrl, '_blank')} text="Info" />
+            <MoreInfoButton onClick={() => window.open(ui?.info_url, '_blank')} text="Info" />
             {ui?.show_share_button && <ShareButton onClick={handleShareClick} text={shareLabel} />}
           </Stack>
         </Stack>
