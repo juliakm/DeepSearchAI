@@ -107,8 +107,17 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
 |UI_FAVICON|| Defaults to Contoso favicon. Configure the URL to your favicon to modify.
 |UI_SHOW_SHARE_BUTTON|True|Share button (right-top)
 |UI_SHOW_CHAT_HISTORY_BUTTON|True|Show chat history button (right-top)
+|UI_INFO_URL|https://dev.azure.com/UUFSolver/UUFSolver/_dashboards/dashboard/2a606a02-579c-43dc-9880-dcf52cb1e832|Info button|
 |SANITIZE_ANSWER|False|Whether to sanitize the answer from Azure OpenAI. Set to True to remove any HTML tags from the response.|
 
+### Add a new environment variable
+
+1. Add the name and value to `.env`
+2. Add the name to an appropriate model in the backend app. 
+3. If the value is needed on the front end:
+    - Add the name to the `UI` to return to the front end in the `/frontend_settings` API. 
+    - Add the name to the frontend model `UI`.
+    - Use in the front end with the `ui` object. 
 
 ## Run development container
 
