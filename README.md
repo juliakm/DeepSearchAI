@@ -139,7 +139,7 @@ Note: settings starting with `AZURE_SEARCH` are only needed when using Azure Ope
     cd frontend && npm install && cd ..
     ```
 
-1. Run the sample wih the following command:
+1. Run the sample with the following command:
 
     ```
     python -m uvicorn app:app  --port 50505 --reload
