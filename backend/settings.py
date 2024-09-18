@@ -50,6 +50,7 @@ class _UiSettings(BaseSettings):
     show_share_button: bool = True
     show_chat_history_button: bool = True
     info_url: str = None
+    search_text: str = "Type a new question..."
 
 
 class _ChatHistorySettings(BaseSettings):
