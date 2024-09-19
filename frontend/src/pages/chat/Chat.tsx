@@ -842,7 +842,7 @@ const Chat = () => {
               <Stack className={styles.chatEmptyState}>
                 <img src={logo} className={styles.chatIcon} aria-hidden="true" />
                 <h1 className={styles.chatEmptyStateTitle}>{ui?.chat_title}</h1>
-                <HtmlFromText htmlText={ui?.chat_description!}/>
+                <p><HtmlFromText htmlText={ui?.chat_description!}/></p>
               </Stack>
             ) : (
               <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? '40px' : '0px' }} role="log">

@@ -29,6 +29,10 @@
   max-height: calc(100vh - 100px);
 }
 
+.chatContainer p {
+  margin-left: 8px;
+}
+
 .chatEmptyState {
   flex-grow: 1;
   display: flex;
