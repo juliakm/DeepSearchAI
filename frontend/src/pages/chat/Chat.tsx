@@ -982,7 +982,7 @@ const Chat = () => {
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Paste in the description field from a UUF item. Title and verbatim are mandatory, the rest of the fields are optional."
+                placeholder={ui?.search_text}
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
