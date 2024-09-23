@@ -139,6 +139,7 @@ export type UI = {
   show_share_button?: boolean
   show_chat_history_button?: boolean
   info_url?: string
+  search_text: string
 }
 
 export type FrontendSettings = {
