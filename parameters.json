@@ -10,6 +10,9 @@
       },
       "identityName": {
         "value": "github-actions-sp"
+      },
+      "accountExists": {
+        "value": false
       }
     }
   }

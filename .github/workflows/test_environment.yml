@@ -79,6 +79,21 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
+      - name: Check if Azure Cognitive Services account exists
+        id: check_account
+        run: |
+         az cognitiveservices account show --name DeepSearchUUF-${{ github.run_id }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} || echo "Account does not exist"
+        restore: accountExists ? true : null
+  
+      - name: Set account existence variable
+        id: set_account_existence
+        run: |
+          if az cognitiveservices account show --name DeepSearchUUF-${{ github.run_id }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} > /dev/null 2>&1; then
+            echo "ACCOUNT_EXISTS=true" >> $GITHUB_ENV
+          else
+             echo "ACCOUNT_EXISTS=false" >> $GITHUB_ENV
+          fi
+
       - name: Deploy Bicep template
         id: deploy_bicep
         run: |

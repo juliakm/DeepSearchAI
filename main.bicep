@@ -1,5 +1,3 @@
-// filepath: /Code/DeepSearchAI/main.bicep
-
 @description('Location for the resources')
 param location string 
 
@@ -8,6 +6,9 @@ param environmentName string
 
 @description('Managed Identity name')
 param identityName string = 'UUF-Solver-my-identity'
+
+@description('Indicates if the Azure Cognitive Services account already exists')
+param accountExists bool
 
 // Contributor role definition ID
 var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
@@ -83,8 +84,8 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
   kind: 'OpenAI'
   properties: {
-        publicNetworkAccess: 'Enabled'
-        restore: true 
+    publicNetworkAccess: 'Enabled'
+    restore: accountExists ? true : null
   }
   identity: {
     type: 'UserAssigned'
@@ -93,23 +94,6 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     }
   }
 }
-
-
-// // Model Deployment Resource
-// resource openAiDeployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = {
-//   parent: openAi
-//   name: 'gpt-4o-mini-deployment'
-//   properties: {
-//     model: {
-//       name: 'gpt-4o-mini' // Ensure this is a valid model name in your Azure OpenAI service
-//       format: 'OpenAI'
-//     }
-//     scaleSettings: {
-//       scaleType: 'Manual' // Adjust as needed; 'Manual' may not be supported for some models
-//       capacity: 3
-//     }
-//   }
-// }
 
 // Role Assignment for Contributor on the App Service
 resource contributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
