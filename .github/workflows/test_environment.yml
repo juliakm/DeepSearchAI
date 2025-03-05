@@ -96,10 +96,9 @@ jobs:
       - name: Get deployment outputs
         id: get_outputs
         run: |
-            outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
-            echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
-        #   echo "APP_NAME=$(echo $outputs | jq -r .appName.value)" >> $GITHUB_ENV
-          env:
+          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
+          echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
+        env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
