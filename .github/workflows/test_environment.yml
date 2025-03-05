@@ -125,7 +125,6 @@ jobs:
         id: deploy-to-uuf-solver-webapp
         with:
           app-name: ${{ env.WEB_APP_NAME }}
-          slot-name: 'Test'
 
     #   - name: 'Deploy to CSSGenie Azure Web App'
     #     uses: azure/webapps-deploy@v3
