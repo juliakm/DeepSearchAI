@@ -1,7 +1,7 @@
 // filepath: /Code/DeepSearchAI/main.bicep
 
 @description('Location for the resources')
-param location string = resourceGroup().location
+param location string 
 
 @description('Name of the environment that can be used as part of naming resource convention.')
 param environmentName string
