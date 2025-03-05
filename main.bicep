@@ -84,6 +84,7 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   kind: 'OpenAI'
   properties: {
         publicNetworkAccess: 'Enabled'
+        restore: true 
   }
   identity: {
     type: 'UserAssigned'

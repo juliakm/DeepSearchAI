@@ -177,7 +177,7 @@ Live URL
 https://aka.ms/uufsolver/?Article=https://learn.microsoft.com/en-us/azure/data-factory/connector-sap-change-data-capture&Customer%20Feedback=Not%20alot%20of%20information%20regarding%20the%20override%20of%20checkpoint%20key.%20Little%20more%20information%20about%20the%20actual%20implementation%20of%20a%20parameterized%20checkpoint%20key%20for%20the%20different%20sources%20would%20be%20nice
 ```
 
-## Run Bicep deployment script
+## Run Bicep deployment script locally
 
 The Bicep deployment script creates multiple resources in an environment you configure. It's designed to be used to quickly spin up test environments. To run the deployment:
 
@@ -213,3 +213,9 @@ The Bicep deployment script creates multiple resources in an environment you con
     ```
 
 5. Go to the Azure portal to verify that the created resources are there.
+
+## Run Bicep deployment script with GitHub Actions workflow
+
+The GitHub Actions workflow creates Azure resources and then deploys the Python web app. You will still need to do some manual configuration of Azure OpenAI. 
+
+
