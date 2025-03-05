@@ -82,8 +82,8 @@ jobs:
       - name: Check if Azure Cognitive Services account exists
         id: check_account
         run: |
-         az cognitiveservices account show --name DeepSearchUUF-${{ github.run_id }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} || echo "Account does not exist"
-        restore: accountExists ? true : null
+          az cognitiveservices account show --name DeepSearchUUF-${{ github.run_id }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} || echo "Account does not exist"
+        continue-on-error: true
   
       - name: Set account existence variable
         id: set_account_existence
@@ -91,7 +91,7 @@ jobs:
           if az cognitiveservices account show --name DeepSearchUUF-${{ github.run_id }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} > /dev/null 2>&1; then
             echo "ACCOUNT_EXISTS=true" >> $GITHUB_ENV
           else
-             echo "ACCOUNT_EXISTS=false" >> $GITHUB_ENV
+            echo "ACCOUNT_EXISTS=false" >> $GITHUB_ENV
           fi
 
       - name: Deploy Bicep template
@@ -101,7 +101,8 @@ jobs:
             --name bicep-deployment-${{ github.run_id }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --template-file main.bicep \
-            --parameters @parameters.json
+            --parameters @parameters.json \
+            --parameters accountExists=${{ env.ACCOUNT_EXISTS }}
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
