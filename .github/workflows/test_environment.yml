@@ -83,6 +83,7 @@ jobs:
         id: deploy_bicep
         run: |
           az deployment group create \
+            --name bicep-deployment-${{ github.run_id }} \
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --template-file main.bicep \
             --parameters @parameters.json
@@ -95,7 +96,7 @@ jobs:
       - name: Get deployment outputs
         id: get_outputs
         run: |
-          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name <deployment-name> --query properties.outputs)
+          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
           echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
           echo "APP_NAME=$(echo $outputs | jq -r .appName.value)" >> $GITHUB_ENV
         env:
