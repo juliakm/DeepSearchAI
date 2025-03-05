@@ -1,0 +1,119 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+# Script needs a resource group to deploy to with an associated federated credential. 
+# @TODO: Resource Group variable
+# Create secrets in advance in GitHub as Actions secrets:
+# AZURE_CLIENT_ID: The appId from the service principal creation.
+# AZURE_CLIENT_SECRET: The password from the service principal creation.
+# AZURE_TENANT_ID: The tenant from the service principal creation.
+# AZURE_SUBSCRIPTION_ID: The subscription ID you retrieved.
+# AZURE_RESOURCE_GROUP: The resource group you will deploy to. 
+
+name: Set up new test environment with Python app to Azure Web App - UUFSolver
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create and start virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install --upgrade gunicorn uvicorn
+        
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            release.zip
+            !venv/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Test'
+      url: ${{ steps.deploy-to-uuf-solver-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+      
+      - name: Login to Azure using Federated Credentials
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+          enable-AzPSSession: true
+
+      - name: Deploy Bicep template
+        id: deploy_bicep
+        run: |
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file main.bicep \
+            --parameters @parameters.json
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Get deployment outputs
+        id: get_outputs
+        run: |
+          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name <deployment-name> --query properties.outputs)
+          echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
+          echo "APP_NAME=$(echo $outputs | jq -r .appName.value)" >> $GITHUB_ENV
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: 'Deploy to UUFSolver Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-uuf-solver-webapp
+        with:
+          app-name: ${{ env.WEB_APP_NAME }}
+          slot-name: 'Test'
+
+      - name: 'Deploy to CSSGenie Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-cssgenie-webapp
+        with:
+          app-name: ${{ env.APP_NAME }}
+          slot-name: 'Test'
