@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Test'
+      name: test
       url: ${{ steps.deploy-to-uuf-solver-webapp.outputs.webapp-url }}
     permissions:
       id-token: write # This is required for requesting the JWT
