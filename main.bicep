@@ -94,6 +94,7 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
 }
 
+
 // // Model Deployment Resource
 // resource openAiDeployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = {
 //   parent: openAi
@@ -120,3 +121,6 @@ resource contributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalType: 'ServicePrincipal'
   }
 }
+
+output webAppName string = 'UUF-Solver-${resourceToken}'
+output webAppUrl string = 'https://${appServiceWebApp.name}.azurewebsites.net'
