@@ -29,31 +29,34 @@ resource searchService 'Microsoft.Search/searchServices@2023-11-01' = {
   }
 }
 
-// App Service Plan module
-module appServicePlan 'br/public:avm/res/web/serverfarm:0.4.1' = {
-  name: 'appServicePlanDeploy'
-  scope: resourceGroup()
-  params: {
-    name: 'asp-UUF-Solver-${resourceToken}'
-    location: location
-    skuName: 'B2'
-    skuCapacity: 1
+// App Service Plan
+resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
+  name: 'asp-UUF-Solver-${resourceToken}'
+  location: location
+  sku: {
+    name: 'B2'
+    capacity: 1
+  }
+  properties: {
+    reserved: true // This sets the plan to use Linux
   }
 }
 
-// Web App module
-module appServiceWebApp 'br/public:avm/res/web/site:0.13.0' = {
-  name: 'UUF-Solver'
-  scope: resourceGroup()
-  params: {
-    name: 'UUF-Solver-${resourceToken}'
-    location: location
-    serverFarmResourceId: appServicePlan.outputs.resourceId
-    kind: 'app'
-    managedIdentities: {
-      userAssignedResourceIds: [
-        userManagedIdentity.id
-      ]
+// Web App
+resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
+  name: 'UUF-Solver-${resourceToken}'
+  location: location
+  properties: {
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'PYTHON|3.11' // Set runtime stack to Python 3.11
+      appCommandLine: 'python3 -m gunicorn --workers 1 --threads 16 app:app' // Set startup command
+    }
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userManagedIdentity.id}': {}
     }
   }
 }
