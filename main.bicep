@@ -4,9 +4,6 @@ param location string
 @description('Name of the environment that can be used as part of naming resource convention.')
 param environmentName string
 
-@description('Managed Identity name')
-var identityName = 'uuf-solver-identity-${resourceToken}'
-
 @description('Indicates if the Azure Cognitive Services account already exists')
 param accountExists bool
 
@@ -63,7 +60,7 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
 
 // Managed Identity resource
 resource userManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
-  name: identityName
+  name: 'uuf-solver-identity-${resourceToken}'
   location: location
 }
 
