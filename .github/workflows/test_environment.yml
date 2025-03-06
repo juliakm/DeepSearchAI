@@ -121,6 +121,15 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
+      - name: Set SCM_DO_BUILD_DURING_DEPLOYMENT to true
+        run: |
+            az webapp config appsettings set --name ${{ env.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+        env:
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  
       - name: 'Deploy to UUFSolver Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-uuf-solver-webapp
