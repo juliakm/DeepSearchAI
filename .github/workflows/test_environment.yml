@@ -129,7 +129,15 @@ jobs:
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  
+
+      - name: Set environment variables from .env.sample file
+        run: |
+              while IFS= read -r line; do
+                if [[ ! $line =~ ^# && ! -z $line ]]; then
+                  az webapp config appsettings set --name ${{ env.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings $line
+                fi
+              done < .env.sample
+            env:
       - name: Wait for app settings to take effect
         run: sleep 30
     
