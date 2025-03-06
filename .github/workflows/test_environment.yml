@@ -130,6 +130,9 @@ jobs:
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   
+      - name: Wait for app settings to take effect
+        run: sleep 30
+    
       - name: 'Deploy to UUFSolver Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-uuf-solver-webapp
