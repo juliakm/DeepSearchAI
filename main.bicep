@@ -5,7 +5,7 @@ param location string
 param environmentName string
 
 @description('Managed Identity name')
-param identityName string = 'UUF-Solver-my-identity'
+var identityName = 'uuf-solver-identity-${resourceToken}'
 
 @description('Indicates if the Azure Cognitive Services account already exists')
 param accountExists bool

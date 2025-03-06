@@ -103,6 +103,7 @@ jobs:
             --template-file main.bicep \
             --parameters @parameters.json \
             --parameters accountExists=${{ env.ACCOUNT_EXISTS }}
+
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
