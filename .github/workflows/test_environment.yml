@@ -160,4 +160,3 @@ jobs:
         id: deploy-to-uuf-solver-webapp
         with:
           app-name: ${{ env.WEB_APP_NAME }}
-          package: release.zip
