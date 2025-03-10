@@ -167,13 +167,17 @@ jobs:
       - name: Register Azure AD application
         id: register_app
         run: |
-          appName="${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}"
-          redirectUri="https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback"
-          appRegistration=$(az ad app create --display-name $appName --reply-urls $redirectUri --available-to-other-tenants false --oauth2-allow-implicit-flow true --required-resource-accesses @manifest.json)
-          clientId=$(echo $appRegistration | jq -r '.appId')
-          objectId=$(echo $appRegistration | jq -r '.id')
-          echo "CLIENT_ID=$clientId" >> $GITHUB_ENV
-          echo "OBJECT_ID=$objectId" >> $GITHUB_ENV
+            appName="${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}"
+            redirectUri="https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback"
+            appRegistration=$(az ad app create \
+              --display-name $appName \
+              --web-redirect-uris $redirectUri \
+              --available-to-other-tenants false \
+              --enable-id-token-issuance true)
+            clientId=$(echo $appRegistration | jq -r '.appId')
+            objectId=$(echo $appRegistration | jq -r '.id')
+            echo "CLIENT_ID=$clientId" >> $GITHUB_ENV
+            echo "OBJECT_ID=$objectId" >> $GITHUB_ENV
 
       - name: Create client secret
         id: create_secret
