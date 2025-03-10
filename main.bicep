@@ -10,6 +10,10 @@ param accountExists bool
 @description('Client ID of the Azure AD application')
 param clientId string
 
+@description('Client Secret of the Azure AD application')
+@secure()
+param clientSecret string
+
 // Contributor role definition ID
 var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 var searchDataReaderId = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
@@ -52,41 +56,38 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
       linuxFxVersion: 'PYTHON|3.11' // Set runtime stack to Python 3.11
       appCommandLine: 'python3 -m gunicorn --workers 1 --threads 16 app:app' // Set startup command
     }
-    authSettings: {
-      enabled: true
-      defaultProvider: 'AzureActiveDirectory'
-      unauthenticatedClientAction: 'RedirectToLoginPage'
-      allowedExternalRedirectUrls: [
-        'https://UUF-Solver-${resourceToken}.azurewebsites.net/.auth/login/aad/callback'
-      ]
-      issuer: 'https://sts.windows.net/${tenant().tenantId}/'
-      clientId: clientId
-      clientSecretSettingName: 'AAD_CLIENT_SECRET'
-      allowedAudiences: [
-        'https://UUF-Solver-${resourceToken}.azurewebsites.net'
-      ]
-      tokenRefreshExtensionHours: 72
-      tokenStoreEnabled: true
-      validateIssuer: true
-      isAadAutoProvisioned: true
-      aad: {
-        clientId: clientId
-        clientSecretSettingName: 'AAD_CLIENT_SECRET'
-        issuer: 'https://sts.windows.net/${tenant().tenantId}/'
-        allowedAudiences: [
-          'https://UUF-Solver-${resourceToken}.azurewebsites.net'
-        ]
-        loginParameters: [
-          'response_type=id_token'
-          'scope=openid profile User.Read'
-        ]
-      }
-    }
   }
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
       '${userManagedIdentity.id}': {}
+    }
+  }
+}
+
+// Authentication Settings
+resource siteAuthSettingsV2 'Microsoft.Web/sites/config@2021-02-01' = {
+  name: '${appServiceWebApp.name}/authsettingsV2'
+  properties: {
+    globalValidation: {
+      unauthenticatedClientAction: 'RedirectToLoginPage'
+      redirectToProvider: 'AzureActiveDirectory'
+    }
+    identityProviders: {
+      azureActiveDirectory: {
+        enabled: true
+        registration: {
+          clientId: clientId
+          clientSecretSettingName: 'AAD_CLIENT_SECRET'
+          openIdIssuer: 'https://sts.windows.net/${tenant().tenantId}/'
+        }
+        login: {
+          loginParameters: [
+            'response_type=id_token',
+            'scope=openid profile User.Read'
+          ]
+        }
+      }
     }
   }
 }
