@@ -102,14 +102,14 @@ jobs:
               --name bicep-deployment-${{ github.run_id }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --template-file main.bicep \
-              --parameters clientId=${{ secrets.AZURE_CLIENT_ID }} \
+              --parameters @parameters.json \
+                           clientId=${{ secrets.AZURE_CLIENT_ID }} \
                            clientSecret=${{ secrets.AZURE_CLIENT_SECRET }}
         env:
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  
 
       - name: Get deployment outputs
         id: get_outputs
