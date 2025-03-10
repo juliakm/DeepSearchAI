@@ -83,7 +83,7 @@ resource siteAuthSettingsV2 'Microsoft.Web/sites/config@2021-02-01' = {
         }
         login: {
           loginParameters: [
-            'response_type=id_token',
+            'response_type=id_token'
             'scope=openid profile User.Read'
           ]
         }
