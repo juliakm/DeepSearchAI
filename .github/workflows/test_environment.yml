@@ -62,6 +62,10 @@ jobs:
       id-token: write # This is required for requesting the JWT
       contents: read
 
+    outputs:
+      WEB_APP_NAME: ${{ steps.get_outputs.outputs.WEB_APP_NAME }}
+      RESOURCE_TOKEN: ${{ steps.get_outputs.outputs.RESOURCE_TOKEN }}
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -114,30 +118,17 @@ jobs:
       - name: Get deployment outputs
         id: get_outputs
         run: |
-            outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
-            echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
-            echo "RESOURCE_TOKEN=$(echo $outputs | jq -r .resourceToken.value)" >> $GITHUB_ENV
-  
+          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
+          echo "WEB_APP_NAME=$(echo $outputs | jq -r .webAppName.value)" >> $GITHUB_ENV
+          echo "RESOURCE_TOKEN=$(echo $outputs | jq -r .resourceToken.value)" >> $GITHUB_ENV
+          echo "::set-output name=WEB_APP_NAME::$(echo $outputs | jq -r .webAppName.value)"
+          echo "::set-output name=RESOURCE_TOKEN::$(echo $outputs | jq -r .resourceToken.value)"
         env:
-            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-      # - name: Check if Search Data Reader role assignment exists
-      #   id: check_search_data_reader_assignment
-      #   run: |
-      #         if az role assignment list --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" | grep -q "roleDefinitionId"; then
-      #           echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
-      #         else
-      #           echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
-      #         fi
-    
-      # - name: Create Search Data Reader role assignment if not exists
-      #   if: env.SEARCH_DATA_READER_ASSIGNMENT_EXISTS == 'false'
-      #   run: |
-      #         az role assignment create --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv)
-    
       - name: Check if Contributor role assignment exists
         id: check_contributor_assignment
         run: |
@@ -176,8 +167,8 @@ jobs:
       - name: Register Azure AD application
         id: register_app
         run: |
-          appName="UUF-Solver"
-          redirectUri="https://${{ env.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback"
+          appName="${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}"
+          redirectUri="https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback"
           appRegistration=$(az ad app create --display-name $appName --reply-urls $redirectUri --available-to-other-tenants false --oauth2-allow-implicit-flow true --required-resource-accesses @manifest.json)
           clientId=$(echo $appRegistration | jq -r '.appId')
           objectId=$(echo $appRegistration | jq -r '.id')
@@ -198,7 +189,7 @@ jobs:
 
       - name: Set AAD client secret
         run: |
-          az webapp config appsettings set --name ${{ env.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings AAD_CLIENT_SECRET=${{ env.CLIENT_SECRET }}
+          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings AAD_CLIENT_SECRET=${{ env.CLIENT_SECRET }}
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -246,7 +237,7 @@ jobs:
 
       - name: Set SCM_DO_BUILD_DURING_DEPLOYMENT to true
         run: |
-          az webapp config appsettings set --name ${{ env.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -255,7 +246,7 @@ jobs:
 
       - name: Set environment variables from appsettings.json file
         run: |
-          az webapp config appsettings set --name ${{ env.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings @appsettings.json
+          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings @appsettings.json
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -269,4 +260,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-uuf-solver-webapp
         with:
-          app-name: ${{ env.WEB_APP_NAME }}
+          app-name: ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}
