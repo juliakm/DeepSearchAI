@@ -121,3 +121,4 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 
 output webAppName string = 'UUF-Solver-${resourceToken}'
 output webAppUrl string = 'https://${appServiceWebApp.name}.azurewebsites.net'
+output resourceToken string = resourceToken
