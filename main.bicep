@@ -67,7 +67,8 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
 
 // Authentication Settings
 resource siteAuthSettingsV2 'Microsoft.Web/sites/config@2021-02-01' = {
-  name: '${appServiceWebApp.name}/authsettingsV2'
+  parent: appServiceWebApp
+  name: 'authsettingsV2'
   properties: {
     globalValidation: {
       unauthenticatedClientAction: 'RedirectToLoginPage'
