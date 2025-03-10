@@ -124,35 +124,34 @@ jobs:
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
-      - name: Check if Search Data Reader role assignment exists
-        id: check_search_data_reader_assignment
-        run: |
-              if az role assignment list --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" | grep -q "roleDefinitionId"; then
-                echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
-              else
-                echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
-              fi
+      # - name: Check if Search Data Reader role assignment exists
+      #   id: check_search_data_reader_assignment
+      #   run: |
+      #         if az role assignment list --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" | grep -q "roleDefinitionId"; then
+      #           echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
+      #         else
+      #           echo "SEARCH_DATA_READER_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
+      #         fi
     
-      - name: Create Search Data Reader role assignment if not exists
-        if: env.SEARCH_DATA_READER_ASSIGNMENT_EXISTS == 'false'
-        run: |
-              az role assignment create --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv)
+      # - name: Create Search Data Reader role assignment if not exists
+      #   if: env.SEARCH_DATA_READER_ASSIGNMENT_EXISTS == 'false'
+      #   run: |
+      #         az role assignment create --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Search Data Reader" --scope $(az search service show --name mysearch-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv)
     
       - name: Check if Contributor role assignment exists
         id: check_contributor_assignment
         run: |
-              if az role assignment list --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Contributor" | grep -q "roleDefinitionId"; then
-                echo "CONTRIBUTOR_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
-              else
-                echo "CONTRIBUTOR_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
-              fi
-    
+          if az role assignment list --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "b24988ac-6180-42a0-ab88-20f7382dd24c" | grep -q "roleDefinitionId"; then
+            echo "CONTRIBUTOR_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "CONTRIBUTOR_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
+          fi
+
       - name: Create Contributor role assignment if not exists
         if: env.CONTRIBUTOR_ASSIGNMENT_EXISTS == 'false'
         run: |
-              az role assignment create --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "Contributor" --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv)
+          az role assignment create --assignee-object-id $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "b24988ac-6180-42a0-ab88-20f7382dd24c" --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee-principal-type ServicePrincipal
     
-
   configure_web_app:
     runs-on: ubuntu-latest
     needs: deploy_infrastructure
