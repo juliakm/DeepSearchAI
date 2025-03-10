@@ -99,17 +99,6 @@ resource userManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2
   location: location
 }
 
-// Assign Search Data Reader role to the identity, scoped to the Cognitive Search resource
-resource searchDataReaderAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(searchService.id, userManagedIdentity.id, searchDataReaderId)
-  scope: searchService
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', searchDataReaderId)
-    principalId: userManagedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 // Azure OpenAI resource
 resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: 'DeepSearchUUF-${resourceToken}'
@@ -127,17 +116,6 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     userAssignedIdentities: {
       '${userManagedIdentity.id}': {}
     }
-  }
-}
-
-// Role Assignment for Contributor on the App Service
-resource contributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(appServiceWebApp.id, userManagedIdentity.id, contributorRoleDefinitionId)
-  scope: resourceGroup()
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', contributorRoleDefinitionId)
-    principalId: userManagedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 
