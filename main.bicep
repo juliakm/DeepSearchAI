@@ -10,6 +10,9 @@ param accountExists bool
 @description('Client ID of the Azure AD application')
 param clientId string
 
+@description('Client Secret of the Azure AD application')
+@secure()
+param clientSecret string
 
 // Contributor role definition ID
 var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
@@ -64,7 +67,7 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
       clientId: clientId
       clientSecretSettingName: 'AAD_CLIENT_SECRET'
       allowedAudiences: [
-        'https://UUF-Solver-${resourceToken}.azurewebsites.net'
+        'https://${appServiceWebApp.name}.azurewebsites.net'
       ]
       tokenRefreshExtensionHours: 72
       tokenStoreEnabled: true
@@ -75,7 +78,7 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
         clientSecretSettingName: 'AAD_CLIENT_SECRET'
         issuer: 'https://sts.windows.net/${tenant().tenantId}/'
         allowedAudiences: [
-          'https://UUF-Solver-${resourceToken}.azurewebsites.net'
+          'https://${appServiceWebApp.name}.azurewebsites.net'
         ]
         loginParameters: [
           'response_type=id_token',
@@ -141,4 +144,4 @@ resource contributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
 }
 
 output webAppName string = 'UUF-Solver-${resourceToken}'
-output webAppUrl string = 'https://UUF-Solver-${resourceToken}.azurewebsites.net'
+output webAppUrl string = 'https://${appServiceWebApp.name}.azurewebsites.net'
