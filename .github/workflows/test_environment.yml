@@ -172,7 +172,7 @@ jobs:
             appRegistration=$(az ad app create \
               --display-name $appName \
               --web-redirect-uris $redirectUri \
-              --available-to-other-tenants false \
+              --sign-in-audience AzureADMyOrg \
               --enable-id-token-issuance true)
             clientId=$(echo $appRegistration | jq -r '.appId')
             objectId=$(echo $appRegistration | jq -r '.id')
@@ -182,7 +182,7 @@ jobs:
       - name: Create client secret
         id: create_secret
         run: |
-          clientSecret=$(az ad app credential reset --id ${{ env.CLIENT_ID }} --append --query password -o tsv)
+          clientSecret=$(az ad app credential reset --id ${{ env.CLIENT_ID }} --append --display-name "Description: ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}" -o tsv)
           echo "CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
 
       - name: Assign API permissions
