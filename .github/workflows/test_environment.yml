@@ -171,7 +171,7 @@ jobs:
             --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
             --enabled true \
             --action LoginWithAzureActiveDirectory \
-            --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net" \
+            --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback" \
             --aad-client-id ${{ secrets.AZURE_CLIENT_ID }} \
             --aad-client-secret ${{ secrets.AZURE_CLIENT_SECRET }} \
             --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
