@@ -164,36 +164,17 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
-      - name: Register Azure AD application
-        id: register_app
+      - name: Configure App Service Authentication
         run: |
-            appName="${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}"
-            redirectUri="https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback"
-            appRegistration=$(az ad app create \
-              --display-name $appName \
-              --web-redirect-uris $redirectUri \
-              --sign-in-audience AzureADMyOrg \
-              --enable-id-token-issuance true)
-            clientId=$(echo $appRegistration | jq -r '.appId')
-            objectId=$(echo $appRegistration | jq -r '.id')
-            echo "CLIENT_ID=$clientId" >> $GITHUB_ENV
-            echo "OBJECT_ID=$objectId" >> $GITHUB_ENV
-
-      - name: Create client secret
-        id: create_secret
-        run: |
-          clientSecret=$(az ad app credential reset --id ${{ env.CLIENT_ID }} --append --display-name "Description: ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}" -o tsv)
-          echo "CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
-
-      - name: Assign API permissions
-        run: |
-          az ad app permission add --id ${{ env.CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000 --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope
-          az ad app permission grant --id ${{ env.CLIENT_ID }} --api 00000003-0000-0000-c000-000000000000
-          az ad app permission admin-consent --id ${{ env.CLIENT_ID }}
-
-      - name: Set AAD client secret
-        run: |
-          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings AAD_CLIENT_SECRET=${{ env.CLIENT_SECRET }}
+          az webapp auth update \
+            --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --enabled true \
+            --action LoginWithAzureActiveDirectory \
+            --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net" \
+            --aad-client-id ${{ secrets.AZURE_CLIENT_ID }} \
+            --aad-client-secret ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
