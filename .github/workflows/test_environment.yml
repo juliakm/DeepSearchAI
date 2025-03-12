@@ -122,7 +122,7 @@ jobs:
           outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
           webAppName=$(echo $outputs | jq -r .webAppName.value)
           resourceToken=$(echo $outputs | jq -r .resourceToken.value)
-          managedIdentityClientId=$(echo $outputs | jq -r .clientId.value)
+          managedIdentityClientId=$(echo $outputs | jq -r .managedIdentityClientId.value)
           echo "WEB_APP_NAME=$webAppName" >> $GITHUB_ENV
           echo "RESOURCE_TOKEN=$resourceToken" >> $GITHUB_ENV
           echo "MANAGED_IDENTITY_CLIENT_ID=$managedIdentityClientId" >> $GITHUB_ENV
