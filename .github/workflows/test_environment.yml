@@ -65,6 +65,8 @@ jobs:
     outputs:
       WEB_APP_NAME: ${{ steps.get_outputs.outputs.WEB_APP_NAME }}
       RESOURCE_TOKEN: ${{ steps.get_outputs.outputs.RESOURCE_TOKEN }}
+      CLIENT_ID: ${{ steps.get_outputs.outputs.CLIENT_ID }}
+      CLIENT_SECRET: ${{ steps.get_outputs.outputs.CLIENT_SECRET }}
 
     steps:
       - name: Download artifact from build job
@@ -121,13 +123,16 @@ jobs:
           outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
           webAppName=$(echo $outputs | jq -r .webAppName.value)
           resourceToken=$(echo $outputs | jq -r .resourceToken.value)
-          webAppId=$(az webapp show --name $webAppName --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv)
+          clientId=$(echo $outputs | jq -r .clientId.value)
+          clientSecret=$(echo $outputs | jq -r .clientSecret.value)
           echo "WEB_APP_NAME=$webAppName" >> $GITHUB_ENV
           echo "RESOURCE_TOKEN=$resourceToken" >> $GITHUB_ENV
-          echo "WEB_APP_ID=$webAppId" >> $GITHUB_ENV
+          echo "CLIENT_ID=$clientId" >> $GITHUB_ENV
+          echo "CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
           echo "::set-output name=WEB_APP_NAME::$webAppName"
           echo "::set-output name=RESOURCE_TOKEN::$resourceToken"
-          echo "::set-output name=WEB_APP_ID::$webAppId"
+          echo "::set-output name=CLIENT_ID::$clientId"
+          echo "::set-output name=CLIENT_SECRET::$clientSecret"
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -169,25 +174,6 @@ jobs:
           allow-no-subscriptions: true
           enable-AzPSSession: true
 
-      - name: Register Azure AD application
-        id: register_app
-        run: |
-          appName="${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}"
-          redirectUri="https://${appName}.azurewebsites.net/.auth/login/aad/callback"
-          appRegistration=$(az ad app create \
-            --display-name $appName \
-            --web-redirect-uris $redirectUri)
-          appId=$(echo $appRegistration | jq -r '.appId')
-          tenantId=$(az account show --query tenantId --output tsv)
-          echo "APP_ID=$appId" >> $GITHUB_ENV
-          echo "TENANT_ID=$tenantId" >> $GITHUB_ENV
-
-      - name: Create client secret
-        id: create_secret
-        run: |
-          clientSecret=$(az ad app credential reset --id ${{ env.APP_ID }} --append --display-name "secret" --query password -o tsv)
-          echo "CLIENT_SECRET=$clientSecret" >> $GITHUB_ENV
-
       - name: Configure App Service Authentication
         run: |
           az webapp auth update \
@@ -196,9 +182,9 @@ jobs:
             --enabled true \
             --action LoginWithAzureActiveDirectory \
             --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback" \
-            --aad-client-id ${{ env.APP_ID }} \
-            --aad-client-secret ${{ env.CLIENT_SECRET }} \
-            --aad-token-issuer-url "https://sts.windows.net/${{ env.TENANT_ID }}/"
+            --aad-client-id ${{ needs.deploy_infrastructure.outputs.CLIENT_ID }} \
+            --aad-client-secret ${{ needs.deploy_infrastructure.outputs.CLIENT_SECRET }} \
+            --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
