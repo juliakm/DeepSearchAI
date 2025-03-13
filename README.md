@@ -216,6 +216,21 @@ The Bicep deployment script creates multiple resources in an environment you con
 
 ## Run Bicep deployment script with GitHub Actions workflow
 
-The GitHub Actions workflow creates Azure resources and then deploys the Python web app. You will still need to do some manual configuration of Azure OpenAI. 
+The GitHub Actions workflow creates Azure resources and then deploys the Python web app.
 
+### Prerequisites
 
+- Create a new resource group for your app. 
+- [Add a federated identity for GitHub actions](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp). Specify an **Entity type of Environment** and a **GitHub environment name** of "test". Copy the 
+- Add an [Entra app registration](https://learn.microsoft.com/en-us/graph/auth-register-app-v2) for your App Service app to use for restricting access. Restrict access to Accounts in this organization directory online.
+
+1. Create [GitHub actions secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
+
+- `AZURE_CLIENT_ID`: The appId from the federated identity.
+- `AZURE_CLIENT_SECRET`: The password from the federated identity.
+- `AZURE_TENANT_ID`: The tenant from federated identity.
+- `AZURE_SUBSCRIPTION_ID`: your subscription ID.
+- `AZURE_RESOURCE_GROUP`: The resource group where you will deploy.
+- `APP_CLIENT_ID`: The appId from the app registration you created in advance.
+
+2. After your first deploy, configure your Entra app registration callback URL and allow public client flows. Add a redirect URL - `https://YOURAPPNAME.azurewebsites.net/.auth/login/aad/callback`. Set to use ID tokens for implicit and hybrid flows. 
