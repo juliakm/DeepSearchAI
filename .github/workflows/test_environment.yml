@@ -9,6 +9,7 @@
 # AZURE_TENANT_ID: The tenant from the service principal creation.
 # AZURE_SUBSCRIPTION_ID: The subscription ID you retrieved.
 # AZURE_RESOURCE_GROUP: The resource group you will deploy to. 
+# APP_CLIENT_ID: The appId from the app registration you created in advance.
 
 name: Set up new test environment with Python app to Azure Web App - UUFSolver
 
@@ -176,7 +177,11 @@ jobs:
             az webapp auth update \
               --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --set identityProviders.azureActiveDirectory.registration.clientId=${{ needs.deploy_infrastructure.outputs.MANAGED_IDENTITY_CLIENT_ID }}
+              --enabled true \
+              --action LoginWithAzureActiveDirectory \
+              --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback" \
+              --aad-client-id ${{ secrets.APP_CLIENT_ID }} \
+              --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
         env:
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
