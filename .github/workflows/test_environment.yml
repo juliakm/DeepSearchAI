@@ -174,19 +174,16 @@ jobs:
 
       - name: Configure App Service Authentication
         run: |
-            az webapp auth update \
+            az webapp auth microsoft update \
               --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --enabled true \
-              --action LoginWithAzureActiveDirectory \
-              --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback" \
-              --aad-client-id ${{ secrets.APP_CLIENT_ID }} \
-              --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
+              --client-id ${{ secrets.APP_CLIENT_ID }}
         env:
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r .env.sample appsettings.json
 
