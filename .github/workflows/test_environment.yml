@@ -123,6 +123,7 @@ jobs:
           webAppName=$(echo $outputs | jq -r .webAppName.value)
           resourceToken=$(echo $outputs | jq -r .resourceToken.value)
           managedIdentityClientId=$(echo $outputs | jq -r .managedIdentityClientId.value)
+          echo "::add-mask::$managedIdentityClientId"
           echo "WEB_APP_NAME=$webAppName" >> $GITHUB_ENV
           echo "RESOURCE_TOKEN=$resourceToken" >> $GITHUB_ENV
           echo "MANAGED_IDENTITY_CLIENT_ID=$managedIdentityClientId" >> $GITHUB_ENV
@@ -175,11 +176,7 @@ jobs:
             az webapp auth update \
               --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --enabled true \
-              --action LoginWithAzureActiveDirectory \
-              --aad-allowed-token-audiences "https://${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }}.azurewebsites.net/.auth/login/aad/callback" \
-              --aad-client-id ${{ needs.deploy_infrastructure.outputs.MANAGED_IDENTITY_CLIENT_ID }} \
-              --aad-token-issuer-url "https://sts.windows.net/${{ secrets.AZURE_TENANT_ID }}/"
+              --set identityProviders.azureActiveDirectory.registration.clientId=${{ needs.deploy_infrastructure.outputs.MANAGED_IDENTITY_CLIENT_ID }}
         env:
             AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
