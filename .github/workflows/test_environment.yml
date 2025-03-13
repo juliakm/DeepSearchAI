@@ -185,7 +185,7 @@ jobs:
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r .env.sample appsettings.json
+        run: zip release.zip ./* -r .env.sample
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
