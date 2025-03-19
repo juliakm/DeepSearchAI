@@ -160,7 +160,6 @@ jobs:
             AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        needs: get_outputs
 
       - name: Check if Contributor role assignment exists
         id: check_contributor_assignment
