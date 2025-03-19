@@ -68,7 +68,7 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
     }
   }
   identity: {
-    type: 'UserAssigned'
+    type: 'SystemAssigned, UserAssigned' // Enable both system-assigned and user-assigned identities
     userAssignedIdentities: {
       '${userManagedIdentity.id}': {}
     }
@@ -149,7 +149,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
   }
 }
 
-// Add a Key Vault secret
+// Add a Key Vault secret for the OpenAI key
 resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
   parent: keyVault
   name: 'openai-key'
@@ -167,24 +167,10 @@ resource openAiEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-prev
   }
 }
 
-// Grant App Service access to Key Vault
-resource keyVaultAccess 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyVault.id, userManagedIdentity.id, 'KeyVaultSecretsUser')
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') // Key Vault Secrets User role
-    principalId: userManagedIdentity.properties.principalId
-  }
-  // Removed unnecessary dependsOn entry
-}
-
-// Key Vault outputs
-output keyVaultName string = keyVault.name
-output keyVaultResourceId string = keyVault.id
-output keyVaultUri string = keyVault.properties.vaultUri
-
-// App Service and identity outputs
-output webAppName string = 'UUF-Solver-${resourceToken}'
-output webAppUrl string = 'https://${appServiceWebApp.name}.azurewebsites.net'
+// Outputs
+output keyVaultId string = keyVault.id
+output systemAssignedPrincipalId string = appServiceWebApp.identity.principalId
+output userAssignedPrincipalId string = userManagedIdentity.properties.principalId
+output webAppName string = appServiceWebApp.name
 output resourceToken string = resourceToken
 output managedIdentityClientId string = userManagedIdentity.properties.clientId

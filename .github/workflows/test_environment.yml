@@ -104,38 +104,63 @@ jobs:
       - name: Deploy Bicep template
         id: deploy_bicep
         run: |
-          az deployment group create \
-            --name bicep-deployment-${{ github.run_id }} \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --template-file main.bicep \
-            --parameters @parameters.json \
-                         clientId=${{ secrets.AZURE_CLIENT_ID }} \
-                         clientSecret=${{ secrets.AZURE_CLIENT_SECRET }}
-        env:
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-
+            az deployment group create \
+              --name bicep-deployment-${{ github.run_id }} \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --template-file main.bicep \
+              --parameters @parameters.json \
+                           clientId=${{ secrets.AZURE_CLIENT_ID }} \
+                           clientSecret=${{ secrets.AZURE_CLIENT_SECRET }}
+          env:
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    
       - name: Get deployment outputs
         id: get_outputs
         run: |
-          outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
-          webAppName=$(echo $outputs | jq -r .webAppName.value)
-          resourceToken=$(echo $outputs | jq -r .resourceToken.value)
-          managedIdentityClientId=$(echo $outputs | jq -r .managedIdentityClientId.value)
-          echo "::add-mask::$managedIdentityClientId"
-          echo "WEB_APP_NAME=$webAppName" >> $GITHUB_ENV
-          echo "RESOURCE_TOKEN=$resourceToken" >> $GITHUB_ENV
-          echo "MANAGED_IDENTITY_CLIENT_ID=$managedIdentityClientId" >> $GITHUB_ENV
-          echo "::set-output name=WEB_APP_NAME::$webAppName"
-          echo "::set-output name=RESOURCE_TOKEN::$resourceToken"
-          echo "::set-output name=MANAGED_IDENTITY_CLIENT_ID::$managedIdentityClientId"
+            outputs=$(az deployment group show --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name bicep-deployment-${{ github.run_id }} --query properties.outputs)
+            keyVaultId=$(echo $outputs | jq -r .keyVaultId.value)
+            systemAssignedPrincipalId=$(echo $outputs | jq -r .systemAssignedPrincipalId.value)
+            userAssignedPrincipalId=$(echo $outputs | jq -r .userAssignedPrincipalId.value)
+            webAppName=$(echo $outputs | jq -r .webAppName.value)
+            resourceToken=$(echo $outputs | jq -r .resourceToken.value)
+            managedIdentityClientId=$(echo $outputs | jq -r .managedIdentityClientId.value)
+            echo "::add-mask::$systemAssignedPrincipalId"
+            echo "::add-mask::$userAssignedPrincipalId"
+            echo "KEY_VAULT_ID=$keyVaultId" >> $GITHUB_ENV
+            echo "SYSTEM_ASSIGNED_PRINCIPAL_ID=$systemAssignedPrincipalId" >> $GITHUB_ENV
+            echo "USER_ASSIGNED_PRINCIPAL_ID=$userAssignedPrincipalId" >> $GITHUB_ENV
+            echo "WEB_APP_NAME=$webAppName" >> $GITHUB_ENV
+            echo "RESOURCE_TOKEN=$resourceToken" >> $GITHUB_ENV
+            echo "MANAGED_IDENTITY_CLIENT_ID=$managedIdentityClientId" >> $GITHUB_ENV
+            echo "::set-output name=KEY_VAULT_ID::$keyVaultId"
+            echo "::set-output name=SYSTEM_ASSIGNED_PRINCIPAL_ID::$systemAssignedPrincipalId"
+            echo "::set-output name=USER_ASSIGNED_PRINCIPAL_ID::$userAssignedPrincipalId"
+            echo "::set-output name=WEB_APP_NAME::$webAppName"
+            echo "::set-output name=RESOURCE_TOKEN::$resourceToken"
+            echo "::set-output name=MANAGED_IDENTITY_CLIENT_ID::$managedIdentityClientId"
         env:
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    
+      - name: Deploy role assignments
+        run: |
+            az deployment group create \
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+              --template-file roleAssignments.bicep \
+              --parameters keyVaultId=${{ env.KEY_VAULT_ID }} \
+                           systemAssignedPrincipalId=${{ env.SYSTEM_ASSIGNED_PRINCIPAL_ID }} \
+                           userAssignedPrincipalId=${{ env.USER_ASSIGNED_PRINCIPAL_ID }}
+        env:
+            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        needs: get_outputs
 
       - name: Check if Contributor role assignment exists
         id: check_contributor_assignment
