@@ -101,9 +101,6 @@ jobs:
             echo "ACCOUNT_EXISTS=false" >> $GITHUB_ENV
           fi
 
-      - name: Enable Bicep experimental features
-        run: az config set bicep.features.experimentalFeaturesEnabled=true
-
       - name: Deploy Bicep template
         id: deploy_bicep
         run: |
