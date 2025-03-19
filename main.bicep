@@ -55,6 +55,16 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
     siteConfig: {
       linuxFxVersion: 'PYTHON|3.11' // Set runtime stack to Python 3.11
       appCommandLine: 'python3 -m gunicorn --workers 1 --threads 16 app:app' // Set startup command
+      appSettings: [
+        {
+          name: 'AZURE_OPENAI_KEY'
+          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=openai-key)'
+        }
+        {
+          name: 'AZURE_OPENAI_ENDPOINT'
+          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=openai-endpoint)'
+        }
+      ]
     }
   }
   identity: {
@@ -119,6 +129,62 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   }
 }
 
+// Key Vault resource
+resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+  name: 'key-vault-${resourceToken}' // Unique name for the Key Vault
+  location: location
+  properties: {
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: subscription().tenantId
+    accessPolicies: [] // Leave empty if using RBAC for access control
+    enablePurgeProtection: false
+    enableSoftDelete: true
+    publicNetworkAccess: 'Enabled'
+  }
+  tags: {
+    environment: environmentName
+    project: 'DeepSearchAI'
+  }
+}
+
+// Add a Key Vault secret
+resource openAiKeySecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: keyVault
+  name: 'openai-key'
+  properties: {
+    value: openAi.listKeys().key1 // Replace with the actual value you want to store
+  }
+}
+
+// Add a Key Vault secret for the OpenAI endpoint
+resource openAiEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  parent: keyVault
+  name: 'openai-endpoint'
+  properties: {
+    value: openAi.properties.endpoint // Use the OpenAI endpoint from the resource
+  }
+}
+
+// Grant App Service access to Key Vault
+resource keyVaultAccess 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(keyVault.id, userManagedIdentity.id, 'KeyVaultSecretsUser')
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') // Key Vault Secrets User role
+    principalId: userManagedIdentity.properties.principalId
+  }
+  // Removed unnecessary dependsOn entry
+}
+
+// Key Vault outputs
+output keyVaultName string = keyVault.name
+output keyVaultResourceId string = keyVault.id
+output keyVaultUri string = keyVault.properties.vaultUri
+
+// App Service and identity outputs
 output webAppName string = 'UUF-Solver-${resourceToken}'
 output webAppUrl string = 'https://${appServiceWebApp.name}.azurewebsites.net'
 output resourceToken string = resourceToken

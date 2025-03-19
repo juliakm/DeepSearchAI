@@ -150,7 +150,21 @@ jobs:
         if: env.CONTRIBUTOR_ASSIGNMENT_EXISTS == 'false'
         run: |
           az role assignment create --assignee-object-id $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "b24988ac-6180-42a0-ab88-20f7382dd24c" --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee-principal-type ServicePrincipal
-    
+
+      - name: Check if Cognitive Services OpenAI User role assignment exists
+        id: check_openai_assignment
+        run: |
+          if az role assignment list --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "b24988ac-6180-42a0-ab88-20f7382dd24c" | grep -q "roleDefinitionId"; then
+            echo "OPENAI_ASSIGNMENT_EXISTS=true" >> $GITHUB_ENV
+          else
+              echo "OPENAI_ASSIGNMENT_EXISTS=false" >> $GITHUB_ENV
+          fi
+  
+      - name: Create Cognitive Services OpenAI User role assignment if not exists
+        if: env.OPENAI_ASSIGNMENT_EXISTS == 'false'
+        run: |
+          az role assignment create --assignee-object-id $(az identity show --name uuf-solver-identity-${{ env.RESOURCE_TOKEN }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --query principalId -o tsv) --role "acdd72a7-3385-48ef-bd42-f606fba81ae7" --scope $(az group show --name ${{ secrets.AZURE_RESOURCE_GROUP }} --query id -o tsv) --assignee-principal-type ServicePrincipal
+  
   configure_web_app:
     runs-on: ubuntu-latest
     needs: deploy_infrastructure
