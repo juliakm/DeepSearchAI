@@ -10,6 +10,14 @@ param accountExists bool
 @description('Client ID of the Azure AD application')
 param clientId string
 
+@description('Client Secret of the Azure AD application')
+@secure()
+param clientSecret string
+
+// Contributor role definition ID
+var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+var searchDataReaderId = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+
 @description('Resource token for naming consistency')
 var resourceToken = toLower(uniqueString(resourceGroup().id, environmentName, location))
 
