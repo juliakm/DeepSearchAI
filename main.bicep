@@ -140,7 +140,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     }
     tenantId: subscription().tenantId
     accessPolicies: [] // Leave empty if using RBAC for access control
-    enablePurgeProtection: false
     enableSoftDelete: true
     publicNetworkAccess: 'Enabled'
   }
