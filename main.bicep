@@ -168,6 +168,7 @@ resource openAiEndpointSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-prev
 }
 
 // Outputs
+output keyVault resource = keyVault
 output keyVaultId string = keyVault.id
 output systemAssignedPrincipalId string = appServiceWebApp.identity.principalId
 output userAssignedPrincipalId string = userManagedIdentity.properties.principalId

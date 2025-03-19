@@ -1,5 +1,5 @@
 @description('Key Vault resource')
-param keyVault resource
+param keyVault resource 'Microsoft.KeyVault/vaults@2021-11-01-preview'
 
 @description('System-assigned managed identity principal ID')
 param systemAssignedPrincipalId string

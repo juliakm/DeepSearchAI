@@ -101,6 +101,9 @@ jobs:
             echo "ACCOUNT_EXISTS=false" >> $GITHUB_ENV
           fi
 
+      - name: Enable Bicep experimental features
+        run: az config set bicep.features.experimentalFeaturesEnabled=true
+
       - name: Deploy Bicep template
         id: deploy_bicep
         run: |
@@ -152,7 +155,7 @@ jobs:
             az deployment group create \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --template-file roleAssignments.bicep \
-              --parameters keyVault="keyVault-${{ env.RESOURCE_TOKEN }}" \
+              --parameters keyVault=${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.KeyVault/vaults/keyVault-${{ env.RESOURCE_TOKEN }} \
                             systemAssignedPrincipalId=${{ env.SYSTEM_ASSIGNED_PRINCIPAL_ID }} \
                             userAssignedPrincipalId=${{ env.USER_ASSIGNED_PRINCIPAL_ID }}
         env:
