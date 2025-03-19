@@ -10,16 +10,13 @@ param systemAssignedPrincipalId string
 @description('User-assigned managed identity principal ID')
 param userAssignedPrincipalId string
 
-// Reference the existing Key Vault
-resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-  name: keyVaultName
-  scope: resourceGroup(keyVaultResourceGroup)
-}
+// Construct the Key Vault resource ID
+var keyVaultId = resourceId(keyVaultResourceGroup, 'Microsoft.KeyVault/vaults', keyVaultName)
 
 // Grant the system-assigned managed identity access to Key Vault
 resource keyVaultAccessSystemAssigned 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyVault.id, systemAssignedPrincipalId, 'KeyVaultSecretsUser')
-  scope: keyVault
+  name: guid(keyVaultId, systemAssignedPrincipalId, 'KeyVaultSecretsUser')
+  scope: keyVaultId
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') // Key Vault Secrets User role
     principalId: systemAssignedPrincipalId
@@ -28,8 +25,8 @@ resource keyVaultAccessSystemAssigned 'Microsoft.Authorization/roleAssignments@2
 
 // Grant the user-assigned managed identity access to Key Vault
 resource keyVaultAccessUserAssigned 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  name: guid(keyVault.id, userAssignedPrincipalId, 'KeyVaultSecretsUser')
-  scope: keyVault
+  name: guid(keyVaultId, userAssignedPrincipalId, 'KeyVaultSecretsUser')
+  scope: keyVaultId
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') // Key Vault Secrets User role
     principalId: userAssignedPrincipalId
