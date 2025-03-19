@@ -147,20 +147,20 @@ jobs:
             AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
     
-      - name: Deploy role assignments
-        run: |
-            az deployment group create \
-              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --template-file roleAssignments.bicep \
-              --parameters keyVaultName=${{ env.KEY_VAULT_NAME }} \
-                            keyVaultResourceGroup=${{ secrets.AZURE_RESOURCE_GROUP }} \
-                            systemAssignedPrincipalId=${{ env.SYSTEM_ASSIGNED_PRINCIPAL_ID }} \
-                            userAssignedPrincipalId=${{ env.USER_ASSIGNED_PRINCIPAL_ID }}
-        env:
-            AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-            AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-            AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      # - name: Deploy role assignments
+      #   run: |
+      #       az deployment group create \
+      #         --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+      #         --template-file roleAssignments.bicep \
+      #         --parameters keyVaultName=${{ env.KEY_VAULT_NAME }} \
+      #                       keyVaultResourceGroup=${{ secrets.AZURE_RESOURCE_GROUP }} \
+      #                       systemAssignedPrincipalId=${{ env.SYSTEM_ASSIGNED_PRINCIPAL_ID }} \
+      #                       userAssignedPrincipalId=${{ env.USER_ASSIGNED_PRINCIPAL_ID }}
+      #   env:
+      #       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      #       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      #       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Check if Contributor role assignment exists
         id: check_contributor_assignment

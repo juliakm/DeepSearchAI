@@ -46,6 +46,11 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
   }
 }
 
+// Reference the Key Vault as an existing resource
+resource keyVaultExisting 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
+  name: 'key-vault-${resourceToken}'
+}
+
 // Web App
 resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
   name: 'UUF-Solver-${resourceToken}'
@@ -58,11 +63,11 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
       appSettings: [
         {
           name: 'AZURE_OPENAI_KEY'
-          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=openai-key)'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultExisting.name};SecretName=openai-key)'
         }
         {
           name: 'AZURE_OPENAI_ENDPOINT'
-          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=openai-endpoint)'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultExisting.name};SecretName=openai-endpoint)'
         }
       ]
     }
@@ -139,7 +144,30 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
       name: 'standard'
     }
     tenantId: subscription().tenantId
-    accessPolicies: [] // Leave empty if using RBAC for access control
+    accessPolicies: [
+      // Access policy for the system-assigned managed identity
+      {
+        tenantId: subscription().tenantId
+        objectId: appServiceWebApp.identity.principalId
+        permissions: {
+          secrets: [
+            'get'
+            'list'
+          ]
+        }
+      }
+      // Access policy for the user-assigned managed identity
+      {
+        tenantId: subscription().tenantId
+        objectId: userManagedIdentity.properties.principalId
+        permissions: {
+          secrets: [
+            'get'
+            'list'
+          ]
+        }
+      }
+    ]
     enableSoftDelete: true
     publicNetworkAccess: 'Enabled'
   }
