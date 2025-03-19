@@ -152,7 +152,8 @@ jobs:
             az deployment group create \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
               --template-file roleAssignments.bicep \
-              --parameters keyVault=${{ secrets.AZURE_RESOURCE_GROUP }}/providers/Microsoft.KeyVault/vaults/keyVault-${{ env.RESOURCE_TOKEN }} \
+              --parameters keyVaultName=${{ env.KEY_VAULT_NAME }} \
+                            keyVaultResourceGroup=${{ secrets.AZURE_RESOURCE_GROUP }} \
                             systemAssignedPrincipalId=${{ env.SYSTEM_ASSIGNED_PRINCIPAL_ID }} \
                             userAssignedPrincipalId=${{ env.USER_ASSIGNED_PRINCIPAL_ID }}
         env:
