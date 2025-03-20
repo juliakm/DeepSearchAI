@@ -147,7 +147,7 @@ resource openAiDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024
   }
     sku: {
       name: 'Standard'
-      capacity: 30 // Adjust capacity as needed
+      capacity: 5 // Adjusted down to meet the quota
     }
   }
 
