@@ -107,8 +107,8 @@ jobs:
             az deployment group create \
               --name bicep-deployment-${{ github.run_id }} \
               --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-              --template-file main.bicep \
-              --parameters @parameters.json \
+              --template-file test_infra/main.bicep \
+              --parameters @test_infra/parameters.json \
                             clientId=${{ secrets.AZURE_CLIENT_ID }} \
                             clientSecret=${{ secrets.AZURE_CLIENT_SECRET }}
         env:
@@ -246,7 +246,7 @@ jobs:
 
       - name: Set environment variables from appsettings.json file
         run: |
-          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings @appsettings.json
+          az webapp config appsettings set --name ${{ needs.deploy_infrastructure.outputs.WEB_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings @test_infra/appsettings.json
         env:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
