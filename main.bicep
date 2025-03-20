@@ -115,7 +115,7 @@ resource userManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2
 }
 
 // Azure OpenAI resource
-resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
+resource openAi 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   name: 'DeepSearchUUF-${resourceToken}'
   location: location
   sku: {
@@ -133,6 +133,24 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     }
   }
 }
+
+// Azure OpenAI deployment resource
+resource openAiDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+  parent: openAi
+  name: 'content-openai-${resourceToken}' // Deployment name under the OpenAI account
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4o-mini' // Model name
+      version: '2024-07-18' // Model version
+    }
+  }
+    sku: {
+      name: 'Standard'
+      capacity: 30 // Adjust capacity as needed
+    }
+  }
+
 
 // Key Vault resource
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
