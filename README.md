@@ -220,15 +220,19 @@ The GitHub Actions workflow creates Azure resources and then deploys the Python 
 
 ### Prerequisites
 
-- Create a new resource group for your app. 
-- [Add a federated identity for GitHub actions](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp). Specify an **Entity type of Environment** and a **GitHub environment name** of "test". Copy the 
+- Create a new resource group for your app.
+- Create an [app registration](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app?tabs=certificate%2Cexpose-a-web-api) in Microsoft Entra ID (example name: *github-actions-federated-identity*).
+    - Add a [client secret to the service principal](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-3-create-a-new-client-secret).
+    - Grant your app access to the resource group.
+    - [Add a new federated identity for GitHub actions](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp). Specify an **Entity type of Environment** and a **GitHub environment name** of "test".  
+- Assign the newly created federated identity the Contributor role in your resource group.
 - Add an [Entra app registration](https://learn.microsoft.com/en-us/graph/auth-register-app-v2) for your App Service app to use for restricting access. Restrict access to Accounts in this organization directory online.
 
 1. Create [GitHub actions secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
 
-- `AZURE_CLIENT_ID`: The appId from the federated identity.
-- `AZURE_CLIENT_SECRET`: The password from the federated identity.
-- `AZURE_TENANT_ID`: The tenant from federated identity.
+- `AZURE_CLIENT_ID`: The appId from the application or managed identity with the federated identity.
+- `AZURE_CLIENT_SECRET`: The password from the application or managed identity with federated identity.
+- `AZURE_TENANT_ID`: The tenant from application or managed identity with federated identity.
 - `AZURE_SUBSCRIPTION_ID`: your subscription ID.
 - `AZURE_RESOURCE_GROUP`: The resource group where you will deploy.
 - `APP_CLIENT_ID`: The appId from the app registration you created in advance.
