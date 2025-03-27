@@ -69,6 +69,10 @@ resource appServiceWebApp 'Microsoft.Web/sites@2021-02-01' = {
           name: 'AZURE_OPENAI_ENDPOINT'
           value: '@Microsoft.KeyVault(VaultName=${keyVaultExisting.name};SecretName=openai-endpoint)'
         }
+        {
+          name: 'AZURE_OPENAI_MODEL'
+          value: 'content-openai-${resourceToken}' // Directly set the deployment name
+        }
       ]
     }
   }

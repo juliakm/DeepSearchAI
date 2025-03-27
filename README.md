@@ -14,7 +14,7 @@ It automatically starts a conversation with the any contents given to the URL qu
 
    These variables are required:
    - `AZURE_OPENAI_RESOURCE` or `AZURE_OPENAI_ENDPOINT`
-   - `AZURE_OPENAI_MODEL`
+   - `AZURE_OPENAI_MODEL` (the name of the deployment)
    - `AZURE_OPENAI_KEY` (optional if using Entra ID)
 
    These variables are optional:
@@ -225,7 +225,7 @@ The GitHub Actions workflow creates Azure resources and then deploys the Python 
     - Add a [client secret to the service principal](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-3-create-a-new-client-secret).
     - Grant your app access to the resource group.
     - [Add a new federated identity for GitHub actions](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp). Specify an **Entity type of Environment** and a **GitHub environment name** of "test".  
-- Assign the newly created federated identity the Contributor role in your resource group.
+- Assign the newly created federated identity the Owner role in your resource group with permission to assign all roles except for priviledged user roles.
 - Add an [Entra app registration](https://learn.microsoft.com/en-us/graph/auth-register-app-v2) for your App Service app to use for restricting access. Restrict access to Accounts in this organization directory online.
 
 1. Create [GitHub actions secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).
@@ -237,4 +237,10 @@ The GitHub Actions workflow creates Azure resources and then deploys the Python 
 - `AZURE_RESOURCE_GROUP`: The resource group where you will deploy.
 - `APP_CLIENT_ID`: The appId from the app registration you created in advance.
 
-2. After your first deploy, configure your Entra app registration callback URL and allow public client flows. Add a redirect URL - `https://YOURAPPNAME.azurewebsites.net/.auth/login/aad/callback`. Set to use ID tokens for implicit and hybrid flows. 
+2. After your first deploy, go to Authentication and configure your Entra app registration callback URL and allow public client flows.
+
+    - Add a redirect URL - `https://YOURAPPNAME.azurewebsites.net/.auth/login/aad/callback`. 
+    - Set the identity to use ID tokens for implicit and hybrid flows.
+
+3. Go to Azure AI Foundry for your Azure OpenAI instance and import the Prompty file. 
+    
