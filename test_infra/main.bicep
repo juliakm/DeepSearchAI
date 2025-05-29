@@ -15,8 +15,8 @@ param clientId string
 param clientSecret string
 
 // Contributor role definition ID
-var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
-var searchDataReaderId = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
+// var contributorRoleDefinitionId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+// var searchDataReaderId = '1407120a-92aa-4202-b7e9-c0e197c71c8f'
 
 @description('Resource token for naming consistency')
 var resourceToken = toLower(uniqueString(resourceGroup().id, environmentName, location))
@@ -101,8 +101,8 @@ resource siteAuthSettingsV2 'Microsoft.Web/sites/config@2021-02-01' = {
       azureActiveDirectory: {
         enabled: true
         registration: {
-          clientId: clientId
-          clientSecretSettingName: 'AAD_CLIENT_SECRET'
+          clientId: userManagedIdentity.properties.clientId
+          clientSecretSettingName: null // Not needed for managed identity
           openIdIssuer: 'https://sts.windows.net/${tenant().tenantId}/'
         }
         login: {
@@ -243,7 +243,7 @@ resource roleAssignmentKeyVault 'Microsoft.Authorization/roleAssignments@2020-04
 
 // Parameters for Cosmos DB NoSQL account
 @description('Name of the Azure Cosmos DB account.')
-param accountName string
+param accountName string  = 'default-cosmos-db-account'
 
 @description('Tags for the resources.')
 param tags object = {}
