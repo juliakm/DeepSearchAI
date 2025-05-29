@@ -230,6 +230,151 @@ resource openAiSystemMessageSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01
   }
 }
 
+resource roleAssignmentKeyVault 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(keyVault.id, userManagedIdentity.id, 'KeyVaultSecretsUser')
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7') // Key Vault Secrets User role
+    principalId: userManagedIdentity.properties.principalId
+  }
+}
+
+// Add the databases and containers for the application
+
+// Parameters for Cosmos DB NoSQL account
+@description('Name of the Azure Cosmos DB account.')
+param accountName string
+
+@description('Tags for the resources.')
+param tags object = {}
+
+@description('Enables serverless for this account. Defaults to false.')
+param enableServerless bool = false
+
+@description('Disables key-based authentication. Defaults to false.')
+param disableKeyBasedAuth bool = false
+
+@description('Enables vector search for this account. Defaults to false.')
+param enableVectorSearch bool = false
+
+
+// Cosmos DB Account
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2021-10-15' = {
+  name: 'cosmos-db-nosql-${resourceToken}'
+  location: location
+  tags: tags
+  properties: {
+    databaseAccountOfferType: 'Standard'
+    disableKeyBasedMetadataWriteAccess: disableKeyBasedAuth
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+      }
+    ]
+  }
+}
+
+// Cosmos DB Database
+var database = {
+  name: 'db_conversation_history' // Database for application
+}
+
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15' = {
+  parent: cosmosDbAccount
+  name: database.name
+  properties: {
+    resource: {
+      id: database.name
+    }
+    options: {
+      throughput: null // Serverless mode does not require throughput
+    }
+  }
+}
+
+// Cosmos DB Containers
+var containers = [
+  {
+    name: 'conversations' // Container for conversation history
+    partitionKeyPaths: [
+      '/userId' // Partition on conversation identifier
+    ]
+    indexingPolicy: {
+      indexingMode: 'consistent'
+      automatic: true
+      includedPaths: [
+        {
+          path: '/*'
+        }
+      ]
+      excludedPaths: [
+        {
+          path: '/"_etag"/?'
+        }
+      ]
+    }
+    vectorEmbeddingPolicy: null // Optional vector embedding policy
+    setThroughput: false
+    autoscale: false
+    throughput: 400
+  }
+]
+
+resource cosmosDbContainers 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = [
+  for (container, _) in containers: {
+    parent: cosmosDbDatabase
+    name: container.name
+    tags: tags
+    properties: {
+      options: container.setThroughput
+        ? container.autoscale
+            ? {
+                autoscaleSettings: {
+                  maxThroughput: container.throughput
+                }
+              }
+            : {
+                throughput: container.throughput
+              }
+        : {}
+      resource: union(
+        {
+          id: container.name
+          partitionKey: {
+            paths: container.partitionKeyPaths
+            kind: 'MultiHash' // Updated to MultiHash
+            version: 2
+          }
+        },
+        !empty(container.indexingPolicy)
+          ? {
+              indexingPolicy: container.indexingPolicy
+            }
+          : {},
+        !empty(container.vectorEmbeddingPolicy)
+          ? {
+              vectorEmbeddingPolicy: container.vectorEmbeddingPolicy
+            }
+          : {}
+      )
+    }
+  }
+]
+
+// Outputs for Cosmos DB
+output endpoint string = cosmosDbAccount.properties.documentEndpoint
+output accountName string = cosmosDbAccount.name
+
+output database object = {
+  name: cosmosDbDatabase.name
+}
+output containers array = [
+  for (_, index) in containers: {
+    name: cosmosDbContainers[index].name
+  }
+]
+
 // Outputs
 output keyVault resource = keyVault
 output keyVaultId string = keyVault.id

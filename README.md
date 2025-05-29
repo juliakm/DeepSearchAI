@@ -198,7 +198,7 @@ The Bicep deployment script creates multiple resources in an environment you con
     az deployment group what-if \
       --name myDeployment \
       --resource-group rg-name \
-      --template-file main.bicep \
+      --template-file test_infra/main.bicep \
       --parameters location=eastus2
     ```
 
@@ -208,7 +208,7 @@ The Bicep deployment script creates multiple resources in an environment you con
         az deployment group create \
           --name myDeployment \
           --resource-group rg-name  \
-          --template-file main.bicep \
+          --template-file test_infra/main.bicep \
           --parameters location=eastus2
     ```
 
